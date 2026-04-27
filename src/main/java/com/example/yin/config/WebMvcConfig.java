@@ -1,0 +1,38 @@
+package com.example.yin.config;
+
+import org.springframework.boot.web.servlet.MultipartConfigFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.util.unit.DataSize;
+import org.springframework.util.unit.DataUnit;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import javax.servlet.MultipartConfigElement;
+
+/**
+ * @Author 祝英台炸油条
+ * @Time : 2022/6/7 17:08
+ **/
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+
+    @Bean
+    public CorsInterceptor corsInterceptor() {
+        return new CorsInterceptor();
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(corsInterceptor())
+                .addPathPatterns("/**");
+    }
+
+    @Bean
+    public MultipartConfigElement multipartConfigElement() {
+        MultipartConfigFactory factory = new MultipartConfigFactory();
+        factory.setMaxFileSize(DataSize.of(20, DataUnit.MEGABYTES));
+        factory.setMaxRequestSize(DataSize.of(20, DataUnit.MEGABYTES));
+        return factory.createMultipartConfig();
+    }
+}

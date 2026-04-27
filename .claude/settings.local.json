@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//e//**)",
+      "Bash(mount)",
+      "Bash(dir *)",
+      "Bash(cmd.exe *)",
+      "Bash(powershell *)",
+      "Bash(python3 *)",
+      "Bash(node *)",
+      "Bash(cmd *)",
+      "PowerShell(npm *)"
+    ]
+  }
+}
