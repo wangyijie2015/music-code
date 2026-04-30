@@ -118,17 +118,32 @@ const router = createRouter({
   routes,
 });
 
+// 公开路由白名单（未登录可访问）。其余所有页面默认要求登录。
+const PUBLIC_PATHS = new Set<string>(["/sign-in", "/sign-up", "/404"]);
+
 router.beforeEach((to, from, next) => {
-  if (to.matched.some((record) => record.meta?.requireAuth)) {
-    if (store.getters.token) {
-      next();
-    } else {
-      ElMessage.warning("请先登录");
-      next({ path: "/sign-in" });
-    }
-  } else {
-    next();
+  const isPublic = PUBLIC_PATHS.has(to.path);
+  const isAuthed = !!store.getters.token;
+
+  if (isAuthed && (to.path === "/sign-in" || to.path === "/sign-up")) {
+    // 已登录用户访问登录/注册页 → 直接回首页
+    next({ path: "/" });
+    return;
   }
+
+  if (isPublic) {
+    next();
+    return;
+  }
+
+  if (isAuthed) {
+    next();
+    return;
+  }
+
+  // 未登录访问受保护页面：保留目标路径，登录后可跳回
+  ElMessage.warning("请先登录");
+  next({ path: "/sign-in", query: to.fullPath !== "/" ? { redirect: to.fullPath } : undefined });
 });
 
 export default router;

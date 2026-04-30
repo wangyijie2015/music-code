@@ -21,6 +21,7 @@
 
 <script lang="ts">
 import { defineComponent, reactive, getCurrentInstance } from "vue";
+import { useRoute } from "vue-router";
 import mixin from "@/mixins/mixin";
 import YinLoginLogo from "@/components/layouts/YinLoginLogo.vue";
 import { HttpManager } from "@/api";
@@ -32,6 +33,7 @@ export default defineComponent({
   },
   setup() {
     const { proxy } = getCurrentInstance();
+    const route = useRoute();
     const { routerManager, changeIndex } = mixin();
 
     // 登录用户名密码
@@ -74,7 +76,9 @@ export default defineComponent({
           proxy.$store.commit("setAuthToken", token || "");
           proxy.$store.commit("setToken", true);
           changeIndex(NavName.Home);
-          routerManager(RouterName.Home, { path: RouterName.Home });
+          // 登录前的目标路径（如有）回跳，否则回首页
+          const redirect = (route.query.redirect as string) || RouterName.Home;
+          proxy.$router.replace({ path: redirect });
         }
       } catch (error) {
         console.error(error);
