@@ -79,6 +79,14 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("@/views/search/Search.vue"),
       },
       {
+        path: "/chat",
+        name: "chat",
+        meta: {
+          requireAuth: true,
+        },
+        component: () => import("@/views/chat/Chat.vue"),
+      },
+      {
         path: "/personal-data",
         name: "personal-data",
         component: () => import("@/views/setting/PersonalData.vue"),

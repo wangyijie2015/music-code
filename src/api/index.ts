@@ -112,6 +112,17 @@ const HttpManager = {
   toggleMvCollect: (mvId, userId) => post(`mv/collect?mvId=${mvId}&userId=${userId}`),
   getMvCollectCount: (mvId) => get(`mv/collect/count?mvId=${mvId}`),
   getMvCollectStatus: (mvId, userId) => get(`mv/collect/status?mvId=${mvId}&userId=${userId}`),
+
+  // =======================> 私信 / 聊天 API
+  // 我的会话伙伴 ID 列表（按最近消息倒序）
+  getConversations: (userId) => get(`message/conversations?userId=${userId}`),
+  // 与某人历史消息（倒序分页）
+  getMessageHistory: ({ userId, peerId, page = 1, size = 20 }) =>
+    get(`message/history?userId=${userId}&peerId=${peerId}&page=${page}&size=${size}`),
+  // 总未读数
+  getUnreadCount: (userId) => get(`message/unread/count?userId=${userId}`),
+  // 标记会话为已读
+  markMessageRead: (userId, peerId) => post(`message/read?userId=${userId}&peerId=${peerId}`),
 };
 
 

@@ -5,6 +5,7 @@ export const enum NavName {
   SongSheet = "歌单",
   Singer = "歌手",
   Mv = "MV",
+  Chat = "消息",
   Personal = "个人主页",
   Setting = "设置",
   SignIn = "登录",
@@ -49,6 +50,10 @@ export const MENULIST = [
   {
     name: NavName.Personal,
     path: RouterName.Personal,
+  },
+  {
+    name: NavName.Chat,
+    path: RouterName.Chat,
   },
   {
     name: NavName.Setting,

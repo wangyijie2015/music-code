@@ -17,8 +17,9 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, getCurrentInstance } from "vue";
+import { computed, getCurrentInstance, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
+import { useStore } from "vuex";
 import YinHeader from "@/components/layouts/YinHeader.vue";
 import YinCurrentPlay from "@/components/layouts/YinCurrentPlay.vue";
 import YinPlayBar from "@/components/layouts/YinPlayBar.vue";
@@ -30,6 +31,8 @@ const route = useRoute();
 const isMvPage = computed(() => route.path.startsWith("/mv"));
 
 const { proxy } = getCurrentInstance();
+const store = useStore();
+const token = computed(() => store.getters.token);
 
 try {
   const saved = sessionStorage.getItem("dataStore");
@@ -43,9 +46,25 @@ try {
 
 window.addEventListener("beforeunload", () => {
   try {
-    sessionStorage.setItem("dataStore", JSON.stringify(proxy.$store.state));
+    const snapshot = { ...proxy.$store.state };
+    delete (snapshot as any).chat; // chat 状态不持久化，登录后重新拉取
+    sessionStorage.setItem("dataStore", JSON.stringify(snapshot));
   } catch (e) {
     console.warn("保存播放状态失败", e);
+  }
+});
+
+onMounted(() => {
+  if (token.value) {
+    store.dispatch("connectChat");
+  }
+});
+
+watch(token, (val) => {
+  if (val) {
+    store.dispatch("connectChat");
+  } else {
+    store.dispatch("disconnectChat");
   }
 });
 </script>

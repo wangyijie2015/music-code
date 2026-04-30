@@ -13,6 +13,7 @@ export const enum RouterName {
   SignUp = "/sign-up",
   Search = "/search",
   Lyric = "/lyric",
+  Chat = "/chat",
   Error = "/404",
   SignOut = "0",
 }

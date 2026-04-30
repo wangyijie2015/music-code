@@ -12,11 +12,19 @@
     </div>
     <!--设置-->
     <yin-header-nav v-if="!token" :styleList="signList" :activeName="activeNavName" @click="goPage"></yin-header-nav>
+    <el-badge v-if="token" class="chat-entry" :value="unreadTotal" :hidden="!unreadTotal" :max="99">
+      <span class="chat-icon-btn" title="消息" @click="goChat">
+        <yin-icon :icon="iconList.LIEBIAO"></yin-icon>
+      </span>
+    </el-badge>
     <el-dropdown class="user-wrap" v-if="token" trigger="click">
-      <el-image class="user" fit="contain" :src="attachImageUrl(userPic)" />
+      <el-image class="user" fit="cover" :src="attachImageUrl(userPic)" />
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item v-for="(item, index) in menuList" :key="index" @click.stop="goMenuList(item.path)">{{ item.name }}</el-dropdown-item>
+          <el-dropdown-item v-for="(item, index) in menuList" :key="index" @click.stop="goMenuList(item.path)">
+            <span class="menu-item-text">{{ item.name }}</span>
+            <el-badge v-if="item.path === '/chat' && unreadTotal" class="menu-badge" :value="unreadTotal" :max="99" />
+          </el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -49,11 +57,17 @@ export default defineComponent({
     const menuList = ref(MENULIST); // 用户下拉菜单项
     const iconList = reactive({
       ERJI: Icon.ERJI,
+      LIEBIAO: Icon.LIEBIAO,
     });
     const keywords = ref("");
     const activeNavName = computed(() => store.getters.activeNavName);
     const userPic = computed(() => store.getters.userPic);
     const token = computed(() => store.getters.token);
+    const unreadTotal = computed(() => store.getters.chatUnreadTotal);
+
+    function goChat() {
+      routerManager(RouterName.Chat, { path: RouterName.Chat });
+    }
 
     function goPage(path, name) {
       if (!path && !name) {
@@ -96,10 +110,12 @@ export default defineComponent({
       activeNavName,
       userPic,
       token,
+      unreadTotal,
       Search,
       goPage,
       goMenuList,
       goSearch,
+      goChat,
       attachImageUrl: HttpManager.attachImageUrl,
     };
   },
@@ -204,6 +220,51 @@ export default defineComponent({
   &:deep(.el-input__inner) {
     color: $color-black;
   }
+}
+
+/*消息入口*/
+.chat-entry {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 14px;
+  height: $header-height;
+
+  .chat-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(91, 141, 239, 0.08);
+    color: $color-blue-active;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    .icon {
+      @include icon(1.1em, $color-blue-active);
+    }
+  }
+  .chat-icon-btn:hover {
+    background: rgba(91, 141, 239, 0.16);
+    transform: translateY(-1px);
+  }
+}
+.chat-entry:deep(.el-badge__content) {
+  background: $theme-gradient;
+  border: none;
+  font-weight: 500;
+}
+
+.menu-item-text {
+  flex: 1;
+}
+.menu-badge {
+  margin-left: 8px;
+}
+.menu-badge:deep(.el-badge__content) {
+  background: $theme-gradient;
+  border: none;
 }
 
 /*用户*/
