@@ -608,14 +608,17 @@ watch(
 );
 
 const attachImageUrl = HttpManager.attachImageUrl;
+const authToken = computed(() => store.getters.authToken);
 
 onMounted(() => {
   changeIndex(NavName.Chat);
-  if (!connected.value && userId.value) {
+  if (!connected.value && authToken.value) {
     store.dispatch("connectChat");
   }
-  store.dispatch("loadConversations");
-  store.dispatch("refreshUnreadTotal");
+  if (authToken.value) {
+    store.dispatch("loadConversations");
+    store.dispatch("refreshUnreadTotal");
+  }
 });
 
 onUnmounted(() => {

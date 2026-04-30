@@ -44,6 +44,17 @@ try {
   sessionStorage.removeItem("dataStore");
 }
 
+// 防止旧版 sessionStorage（无 authToken 字段）覆盖掉刚从 localStorage 初始化的 token
+try {
+  const lsToken = localStorage.getItem("music_authToken");
+  if (lsToken && !proxy.$store.getters.authToken) {
+    proxy.$store.commit("setAuthToken", lsToken);
+  }
+  if (proxy.$store.getters.authToken && !proxy.$store.getters.token) {
+    proxy.$store.commit("setToken", true);
+  }
+} catch { /* ignore */ }
+
 window.addEventListener("beforeunload", () => {
   try {
     const snapshot = { ...proxy.$store.state };
@@ -67,6 +78,12 @@ watch(token, (val) => {
     store.dispatch("disconnectChat");
   }
 });
+
+// 401: request.ts 触发的全局事件 → 清 store
+function onAuthExpired() {
+  store.dispatch("userLogout");
+}
+window.addEventListener("auth:expired", onAuthExpired);
 </script>
 
 <style lang="scss" scoped>

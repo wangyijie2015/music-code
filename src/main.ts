@@ -20,4 +20,10 @@ declare module "@vue/runtime-core" {
   }
 }
 
+// 跨标签 / 浏览器重开恢复登录态：user 模块的 state 已经从 localStorage 取了 authToken，
+// 这里把 configure.token 也置 true，让 router beforeEach 守卫能放行受保护页面
+if (store.getters.authToken && !store.getters.token) {
+  store.commit("setToken", true);
+}
+
 createApp(App).use(store).use(router).use(ElementPlus, { locale: zhCn }).mount("#app");

@@ -6,31 +6,32 @@ class ChatSocket {
   private ws: WebSocket | null = null;
   private listeners = new Set<Listener>();
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  private currentUserId: string | number | null = null;
+  private currentToken: string | null = null;
   private intentionalClose = false;
   private retryDelay = 2000;
   private readonly maxRetryDelay = 30000;
 
-  connect(userId: string | number) {
-    if (userId === undefined || userId === null || userId === "") {
-      console.warn("[Chat] 拒绝连接：userId 为空", userId);
+  connect(token: string) {
+    if (!token) {
+      console.warn("[Chat] 拒绝连接：token 为空");
       return;
     }
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
-      if (this.currentUserId === userId) {
-        console.log("[Chat] 已连接到 userId=" + userId + "，跳过");
+      if (this.currentToken === token) {
+        console.log("[Chat] 已使用相同 token 连接，跳过");
         return;
       }
-      console.log("[Chat] 切换账号，先断开旧连接");
+      console.log("[Chat] token 变化，先断开旧连接");
       this.disconnect();
     }
-    this.currentUserId = userId;
+    this.currentToken = token;
     this.intentionalClose = false;
 
     const baseURL = getBaseURL() || `${location.protocol}//${location.host}`;
     const wsBase = baseURL.replace(/^http/i, "ws").replace(/\/$/, "");
-    const url = `${wsBase}/ws/chat?userId=${encodeURIComponent(String(userId))}`;
-    console.log("[Chat] 准备连接：", url);
+    const url = `${wsBase}/ws/chat?token=${encodeURIComponent(token)}`;
+    // 不打印完整 token，只显示前 6 位避免日志泄露
+    console.log("[Chat] 准备连接：", wsBase + "/ws/chat?token=" + token.slice(0, 6) + "***");
 
     try {
       this.ws = new WebSocket(url);
@@ -41,7 +42,7 @@ class ChatSocket {
     }
 
     this.ws.onopen = () => {
-      console.log("[Chat] ✅ 已连接 userId=" + this.currentUserId);
+      console.log("[Chat] ✅ 已连接");
       this.retryDelay = 2000;
       this.emit({ type: "open" });
     };
@@ -66,7 +67,7 @@ class ChatSocket {
       );
       this.emit({ type: "close" });
       this.ws = null;
-      if (!this.intentionalClose && this.currentUserId) {
+      if (!this.intentionalClose && this.currentToken) {
         console.log(`[Chat] 将在 ${this.retryDelay / 1000}s 后重连`);
         this.scheduleReconnect();
       }
@@ -74,10 +75,10 @@ class ChatSocket {
   }
 
   private scheduleReconnect() {
-    if (this.reconnectTimer || !this.currentUserId) return;
+    if (this.reconnectTimer || !this.currentToken) return;
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
-      if (this.currentUserId) this.connect(this.currentUserId);
+      if (this.currentToken) this.connect(this.currentToken);
     }, this.retryDelay);
     this.retryDelay = Math.min(this.retryDelay * 2, this.maxRetryDelay);
   }
@@ -92,7 +93,7 @@ class ChatSocket {
       try { this.ws.close(); } catch { /* noop */ }
       this.ws = null;
     }
-    this.currentUserId = null;
+    this.currentToken = null;
     this.retryDelay = 2000;
   }
 

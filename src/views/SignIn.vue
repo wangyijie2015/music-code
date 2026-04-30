@@ -58,9 +58,20 @@ export default defineComponent({
         });
 
         if (result.success) {
-          proxy.$store.commit("setUserId", result.data[0].id);
-          proxy.$store.commit("setUsername", result.data[0].username);
-          proxy.$store.commit("setUserPic", result.data[0].avator);
+          // 兼容新旧两种返回结构：
+          //   新：data = { user: {...}, token: "..." }
+          //   旧：data = [user]
+          const data: any = result.data;
+          const user = Array.isArray(data) ? data[0] : data?.user;
+          const token = Array.isArray(data) ? "" : data?.token;
+          if (!user) {
+            (proxy as any).$message.error("登录响应格式异常");
+            return;
+          }
+          proxy.$store.commit("setUserId", user.id);
+          proxy.$store.commit("setUsername", user.username);
+          proxy.$store.commit("setUserPic", user.avator);
+          proxy.$store.commit("setAuthToken", token || "");
           proxy.$store.commit("setToken", true);
           changeIndex(NavName.Home);
           routerManager(RouterName.Home, { path: RouterName.Home });

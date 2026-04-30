@@ -115,16 +115,16 @@ const HttpManager = {
   getMvCollectCount: (mvId) => get(`mv/collect/count?mvId=${mvId}`),
   getMvCollectStatus: (mvId, userId) => get(`mv/collect/status?mvId=${mvId}&userId=${userId}`),
 
-  // =======================> 私信 / 聊天 API
+  // =======================> 私信 / 聊天 API（鉴权由 token 完成，不再传 userId）
   // 我的会话伙伴 ID 列表（按最近消息倒序）
-  getConversations: (userId) => get(`message/conversations?userId=${userId}`),
+  getConversations: () => get(`message/conversations`),
   // 与某人历史消息（倒序分页）
-  getMessageHistory: ({ userId, peerId, page = 1, size = 20 }) =>
-    get(`message/history?userId=${userId}&peerId=${peerId}&page=${page}&size=${size}`),
+  getMessageHistory: ({ peerId, page = 1, size = 20 }: { peerId: number | string; page?: number; size?: number }) =>
+    get(`message/history?peerId=${peerId}&page=${page}&size=${size}`),
   // 总未读数
-  getUnreadCount: (userId) => get(`message/unread/count?userId=${userId}`),
+  getUnreadCount: () => get(`message/unread/count`),
   // 标记会话为已读
-  markMessageRead: (userId, peerId) => post(`message/read?userId=${userId}&peerId=${peerId}`),
+  markMessageRead: (peerId) => post(`message/read?peerId=${peerId}`),
   // 上传聊天媒体（图片 / 视频），type: "image" | "video"
   uploadChatMedia: (file: File, type: "image" | "video", onProgress?: (p: number) => void) => {
     const fd = new FormData();

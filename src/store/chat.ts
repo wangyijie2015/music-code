@@ -179,14 +179,14 @@ export default {
       });
     },
     connectChat({ dispatch, rootGetters }) {
-      const userId = rootGetters.userId;
-      if (userId === undefined || userId === null || userId === "") {
-        console.warn("[Chat] connectChat 跳过：userId 为空，请确认已登录", userId);
+      const token = rootGetters.authToken;
+      if (!token) {
+        console.warn("[Chat] connectChat 跳过：authToken 为空，请确认已登录");
         return;
       }
-      console.log("[Chat] connectChat userId=" + userId + " (typeof=" + typeof userId + ")");
+      console.log("[Chat] connectChat with token=" + token.slice(0, 6) + "***");
       dispatch("bindChatSocket");
-      chatSocket.connect(userId);
+      chatSocket.connect(token);
     },
     disconnectChat({ commit }) {
       chatSocket.disconnect();
@@ -223,10 +223,9 @@ export default {
       return true;
     },
     async loadConversations({ commit, rootGetters }) {
-      const userId = rootGetters.userId;
-      if (!userId) return;
+      if (!rootGetters.authToken) return;
       try {
-        const res = (await HttpManager.getConversations(userId)) as ResponseBody;
+        const res = (await HttpManager.getConversations()) as ResponseBody;
         commit("setChatConversations", res?.data || []);
       } catch (e) {
         console.error("[Chat] 加载会话失败", e);
@@ -236,10 +235,9 @@ export default {
       { commit, rootGetters },
       { peerId, page = 1, size = 20, replace = false }: { peerId: number | string; page?: number; size?: number; replace?: boolean }
     ) {
-      const userId = rootGetters.userId;
-      if (!userId || !peerId) return [];
+      if (!rootGetters.authToken || !peerId) return [];
       try {
-        const res = (await HttpManager.getMessageHistory({ userId, peerId, page, size })) as ResponseBody;
+        const res = (await HttpManager.getMessageHistory({ peerId, page, size })) as ResponseBody;
         const list: ChatMessage[] = (res?.data || [])
           .map((m: any) => ({
             id: m.id,
@@ -263,20 +261,18 @@ export default {
       }
     },
     async refreshUnreadTotal({ commit, rootGetters }) {
-      const userId = rootGetters.userId;
-      if (!userId) return;
+      if (!rootGetters.authToken) return;
       try {
-        const res = (await HttpManager.getUnreadCount(userId)) as ResponseBody;
+        const res = (await HttpManager.getUnreadCount()) as ResponseBody;
         commit("setUnreadTotal", Number(res?.data) || 0);
       } catch (e) {
         console.error("[Chat] 加载未读失败", e);
       }
     },
     async markPeerRead({ commit, rootGetters }, peerId: number | string) {
-      const userId = rootGetters.userId;
-      if (!userId || !peerId) return;
+      if (!rootGetters.authToken || !peerId) return;
       try {
-        await HttpManager.markMessageRead(userId, peerId);
+        await HttpManager.markMessageRead(peerId);
         commit("clearUnreadOfPeer", peerId);
       } catch (e) {
         console.error("[Chat] 标记已读失败", e);

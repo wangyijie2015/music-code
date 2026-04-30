@@ -2,12 +2,25 @@ import axios from "axios";
 import router from "@/router";
 
 const BASE_URL = process.env.NODE_HOST;
+const LS_TOKEN_KEY = "music_authToken";
 
 axios.defaults.timeout = 30000; // 超时时间设置（视频流需更长）
 axios.defaults.withCredentials = true; // true允许跨域
 axios.defaults.baseURL = BASE_URL;
 // Content-Type 响应头
 axios.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8";
+
+// 请求拦截器：自动注入 Authorization 头
+axios.interceptors.request.use((config) => {
+  try {
+    const token = localStorage.getItem(LS_TOKEN_KEY);
+    if (token) {
+      config.headers = config.headers || {};
+      (config.headers as any)["Authorization"] = `Bearer ${token}`;
+    }
+  } catch { /* localStorage 不可用时跳过 */ }
+  return config;
+});
 
 // 响应拦截器
 axios.interceptors.response.use(
@@ -27,15 +40,12 @@ axios.interceptors.response.use(
       return Promise.reject(error);
     }
     switch (error.response.status) {
-      // 401: 未登录
+      // 401: 未登录或 token 失效
       case 401:
-        router.replace({ path: "/sign-in" });
+        clearAuthAndRedirect();
         break;
       case 403:
-        // 跳转登录页面
-        setTimeout(() => {
-          router.replace({ path: "/sign-in" });
-        }, 1000);
+        setTimeout(() => clearAuthAndRedirect(), 1000);
         break;
       // 404 请求不存在
       case 404:
@@ -47,6 +57,23 @@ axios.interceptors.response.use(
 
 export function getBaseURL() {
   return BASE_URL;
+}
+
+/** 清空本地登录态并跳到登录页（避免循环 import store） */
+function clearAuthAndRedirect() {
+  try {
+    localStorage.removeItem(LS_TOKEN_KEY);
+    localStorage.removeItem("music_userId");
+    localStorage.removeItem("music_username");
+    localStorage.removeItem("music_userPic");
+  } catch { /* ignore */ }
+  // 通知应用层做 store 清理 + 断开 chat
+  try {
+    window.dispatchEvent(new CustomEvent("auth:expired"));
+  } catch { /* ignore */ }
+  if (router.currentRoute.value.path !== "/sign-in") {
+    router.replace({ path: "/sign-in" });
+  }
 }
 
 /**
