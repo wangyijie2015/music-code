@@ -3,38 +3,103 @@
 
 @media screen and (min-width: $sm) {
   .sign {
-    width: 300px;
+    width: 360px;
     position: absolute;
-    left: 60vw;
-    top: $header-height + 60px;
+    left: calc(50vw + (50vw - 360px) / 2);
+    top: $header-height + 50px;
   }
 }
 
 @media screen and (max-width: $sm) {
   .sign {
-    width: 60vw;
+    width: 78vw;
     position: relative;
-    margin: auto;
-    margin-top: -78vh;
+    margin: -65vh auto 0;
   }
 }
 
 .sign {
-  padding: 30px 50px;
-  border-radius: 10px;
-  background-color: $color-white;
+  padding: 36px 36px 28px;
+  border-radius: 18px;
+  background-color: rgba(255, 255, 255, 0.96);
+  box-shadow: $shadow-lg;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  animation: signFadeIn 0.5s ease;
 
   .sign-head {
     text-align: center;
-    margin-bottom: 10px;
-    font-size: 20px;
+    margin-bottom: 28px;
+    font-size: 22px;
     font-weight: 600;
+    color: $theme-text-primary;
+    position: relative;
+    padding-bottom: 14px;
+  }
+
+  .sign-head::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 3px;
+    border-radius: 2px;
+    background: $theme-gradient;
   }
 
   .sign-btn:deep(.el-form-item__content) {
     @include layout(space-between);
+    margin-top: 8px;
     button {
-      width: 50%;
+      width: 48%;
+      height: 42px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 15px;
     }
   }
+
+  &:deep(.el-input__wrapper) {
+    border-radius: 10px;
+    padding: 4px 12px;
+    box-shadow: 0 0 0 1px $theme-border inset !important;
+    background-color: #fafbfd;
+    transition: box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  &:deep(.el-input__wrapper.is-focus) {
+    background-color: #fff;
+    box-shadow: 0 0 0 1px $color-blue-active inset, 0 0 0 3px rgba(91, 141, 239, 0.18) !important;
+  }
+  &:deep(.el-input__inner) {
+    height: 36px;
+  }
+
+  &:deep(.el-button--primary) {
+    background: $theme-gradient;
+    border: none;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(91, 141, 239, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  &:deep(.el-button--primary:hover) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(91, 141, 239, 0.42);
+  }
+  &:deep(.el-button:not(.el-button--primary)) {
+    border: 1px solid $theme-border;
+    background: #fff;
+    color: $theme-text-primary;
+  }
+  &:deep(.el-button:not(.el-button--primary):hover) {
+    border-color: $color-blue-active;
+    color: $color-blue-active;
+  }
+}
+
+@keyframes signFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
