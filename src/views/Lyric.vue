@@ -1,28 +1,33 @@
 <template>
-  <div class="song-container">
-    <el-image class="song-pic" fit="contain" :src="attachImageUrl(songPic)" />
-    <ul class="song-info">
-      <li>歌手：{{ singerName }}</li>
-      <li>歌曲：{{ songTitle }}</li>
-    </ul>
-  </div>
-  <div class="container">
-    <div class="lyric-container">
-      <div class="song-lyric">
-        <transition-group name="lyric-fade">
-          <!--有歌词-->
-          <ul :style="{ top: lrcTop }" class="has-lyric" v-if="lyricArr.length" key="has-lyric">
-            <li v-for="(item, index) in lyricArr" :key="index">
-              {{ item[1] }}
-            </li>
-          </ul>
-          <!--没歌词-->
-          <div v-else class="no-lyric" key="no-lyric">
-            <span>暂无歌词</span>
-          </div>
-        </transition-group>
+  <div class="lyric-page">
+    <div class="lyric-bg" :style="{ backgroundImage: `url(${attachImageUrl(songPic)})` }"></div>
+    <div class="song-container">
+      <div class="song-pic-wrap">
+        <el-image class="song-pic" fit="cover" :src="attachImageUrl(songPic)" />
       </div>
-      <comment :playId="songId" :type="0"></comment>
+      <ul class="song-info">
+        <li class="song-name">{{ songTitle }}</li>
+        <li class="song-artist">歌手：{{ singerName }}</li>
+      </ul>
+    </div>
+    <div class="container">
+      <div class="lyric-container">
+        <div class="song-lyric">
+          <transition-group name="lyric-fade">
+            <!--有歌词-->
+            <ul :style="{ top: lrcTop }" class="has-lyric" v-if="lyricArr.length" key="has-lyric">
+              <li v-for="(item, index) in lyricArr" :key="index">
+                {{ item[1] }}
+              </li>
+            </ul>
+            <!--没歌词-->
+            <div v-else class="no-lyric" key="no-lyric">
+              <span>暂无歌词</span>
+            </div>
+          </transition-group>
+        </div>
+        <comment :playId="songId" :type="0"></comment>
+      </div>
     </div>
   </div>
 </template>
@@ -84,8 +89,12 @@ export default defineComponent({
 
         // 高亮当前行
         if (items[activeIndex]) {
-          items[activeIndex].style.color = "#95d2f6";
+          items[activeIndex].style.color = "#3b6bff";
+          items[activeIndex].style.fontWeight = "600";
           items[activeIndex].style.fontSize = "18px";
+        }
+        if (lastActiveIndex >= 0 && items[lastActiveIndex]) {
+          items[lastActiveIndex].style.fontWeight = "400";
         }
 
         lrcTop.value = -activeIndex * 30 + 50 + "px";
@@ -111,58 +120,133 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import "@/assets/css/var.scss";
 
+.lyric-page {
+  position: relative;
+  min-height: 80vh;
+  padding-top: 30px;
+}
+
+.lyric-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-position: center;
+  background-size: cover;
+  filter: blur(60px) saturate(140%);
+  opacity: 0.35;
+  z-index: -1;
+  transform: scale(1.2);
+}
+
 .song-container {
   position: fixed;
-  top: 120px;
-  left: 50px;
+  top: 130px;
+  left: 60px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+
+  .song-pic-wrap {
+    width: 300px;
+    height: 300px;
+    border-radius: 16px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: $shadow-lg;
+    animation: spin 22s linear infinite;
+  }
 
   .song-pic {
-    height: 300px;
-    width: 300px;
-    border: 4px solid white;
+    height: 100%;
+    width: 100%;
     border-radius: 12px;
+    overflow: hidden;
   }
 
   .song-info {
     width: 300px;
+    margin-top: 24px;
+    text-align: center;
     li {
       width: 100%;
-      line-height: 40px;
-      font-size: 18px;
-      padding-left: 10%;
+      line-height: 30px;
+      padding: 0;
+    }
+    .song-name {
+      font-size: 22px;
+      font-weight: 600;
+      color: $theme-text-primary;
+      margin-bottom: 4px;
+    }
+    .song-artist {
+      font-size: 14px;
+      color: $theme-text-secondary;
     }
   }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .lyric-container {
   font-family: $font-family;
   .song-lyric {
     position: relative;
-    min-height: 300px;
-    padding: 30px 0;
-    overflow: auto;
-    border-radius: 12px;
-    background-color: $color-light-grey;
+    min-height: 360px;
+    padding: 40px 0;
+    overflow: hidden;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid $theme-border;
+    box-shadow: $shadow-md;
+
+    &::before, &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 60px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    &::before {
+      top: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), transparent);
+    }
+    &::after {
+      bottom: 0;
+      background: linear-gradient(0deg, rgba(255,255,255,0.95), transparent);
+    }
+
     .has-lyric {
       position: absolute;
-      transition: all 1s;
+      width: 100%;
+      transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
       li {
         width: 100%;
         height: 40px;
         text-align: center;
         font-size: 14px;
         line-height: 40px;
+        color: $theme-text-secondary;
+        transition: color 0.3s ease, font-size 0.3s ease, font-weight 0.3s ease;
       }
     }
     .no-lyric {
       position: absolute;
-      margin: 100px 0;
+      width: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
 
       span {
         font-size: 18px;
-        text-align: center;
+        color: $theme-text-secondary;
       }
     }
   }
@@ -184,7 +268,7 @@ export default defineComponent({
     padding-top: 30px;
   }
   .lyric-container {
-    margin: 0 150px 0px 400px;
+    margin: 0 150px 0 400px;
   }
 }
 

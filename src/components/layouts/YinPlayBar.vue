@@ -20,7 +20,7 @@
         <!--上一首-->
         <yin-icon class="yin-play-show" :icon="iconList.SHANGYISHOU" @click="prev"></yin-icon>
         <!--播放-->
-        <yin-icon :icon="playBtnIcon" @click="togglePlay"></yin-icon>
+        <yin-icon class="play-main" :icon="playBtnIcon" @click="togglePlay"></yin-icon>
         <!--下一首-->
         <yin-icon class="yin-play-show" :icon="iconList.XIAYISHOU" @click="next"></yin-icon>
         <!--音量-->

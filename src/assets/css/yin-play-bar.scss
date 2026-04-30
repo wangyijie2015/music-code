@@ -6,18 +6,53 @@
   z-index: 100;
   bottom: 0;
   width: 100%;
-  transition: all 0.5s;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 
   .fold {
     position: absolute;
-    bottom: $play-bar-height + 10px;
-    left: 20px;
+    bottom: $play-bar-height + 18px;
+    left: 24px;
     cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: $shadow-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.4s ease, background 0.2s ease;
+    .icon {
+      @include icon(0.95em, $theme-text-secondary);
+    }
+    &:hover {
+      background: #fff;
+      .icon { color: $color-blue-active; }
+    }
   }
 
   .progress {
     position: absolute;
     margin-top: -10px;
+    width: 100%;
+    padding: 0;
+    z-index: 2;
+  }
+
+  .progress:deep(.el-slider__runway) {
+    height: 4px;
+    background: rgba(31, 35, 48, 0.08);
+  }
+  .progress:deep(.el-slider__bar) {
+    height: 4px;
+    background: $theme-gradient;
+  }
+  .progress:deep(.el-slider__button) {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #fff;
+    background: $color-blue-active;
+    box-shadow: 0 2px 6px rgba(91, 141, 239, 0.4);
   }
 
   .control-box {
@@ -27,38 +62,78 @@
     height: $play-bar-height;
     width: 100%;
     background-color: $theme-play-bar-color;
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-top: 1px solid $theme-border;
+    box-shadow: 0 -8px 24px rgba(31, 35, 48, 0.06);
 
     .song-ctr {
       position: relative;
       margin: auto;
       flex-wrap: nowrap;
+      gap: 18px;
 
       svg {
-        width: 5rem;
+        width: 1.4rem;
+        height: 1.4rem;
         cursor: pointer;
+        transition: transform 0.2s ease, color 0.2s ease;
+      }
+
+      .icon:hover {
+        color: $color-blue-active;
+        transform: scale(1.1);
+      }
+
+      .play-main {
+        width: 44px;
+        height: 44px;
+        padding: 10px;
+        border-radius: 50%;
+        background: $theme-gradient;
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(91, 141, 239, 0.45);
+        box-sizing: border-box;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .play-main:hover {
+        transform: scale(1.06);
+        box-shadow: 0 8px 22px rgba(91, 141, 239, 0.6);
       }
     }
 
     .info-box {
       .song-bar-img {
-        width: calc($play-bar-height - 15px);
-        height: calc($play-bar-height - 15px);
-        border-radius: 4px;
-        margin-right: 10px;
+        width: calc($play-bar-height - 14px);
+        height: calc($play-bar-height - 14px);
+        border-radius: 8px;
+        margin-right: 12px;
         cursor: pointer;
+        box-shadow: 0 4px 10px rgba(31, 35, 48, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .song-bar-img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 14px rgba(91, 141, 239, 0.3);
       }
       .song-info {
         font-size: 14px;
+        font-weight: 500;
+        color: $theme-text-primary;
+        line-height: 1.4;
       }
       .time-info {
         font-size: 12px;
-        color: $color-grey;
+        color: $theme-text-secondary;
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
       }
     }
 
     .song-edit {
       width: 30%;
       justify-content: flex-end;
+      padding-right: 24px;
     }
   }
 }
@@ -72,7 +147,7 @@
 }
 
 .icon {
-  @include icon(1.1em, $color-black);
+  @include icon(1.2em, $theme-text-primary);
 }
 
 .active.icon {
@@ -83,7 +158,7 @@
   .info-box {
     width: 30%;
     min-width: 200px;
-    margin-left: 30px;
+    margin-left: 24px;
   }
   .song-ctr,
   .info-box,
@@ -98,7 +173,7 @@
     display: flex;
     flex-direction: row;
     width: 70%;
-    margin-left: 10px;
+    margin-left: 12px;
   }
 
   .yin-play-show {
