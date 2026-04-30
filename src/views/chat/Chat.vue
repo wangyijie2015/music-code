@@ -69,7 +69,43 @@
             >
               <el-image class="msg-avatar" fit="cover" :src="attachImageUrl(isSelf(msg) ? userPic : activePeerInfo.avatar)" />
               <div class="msg-bubble-wrap">
-                <div class="msg-bubble" :class="{ failed: msg.status === 'failed' }">{{ msg.content }}</div>
+                <!-- 文本 -->
+                <div
+                  v-if="!msg.msgType"
+                  class="msg-bubble"
+                  :class="{ failed: msg.status === 'failed' }"
+                >{{ msg.content }}</div>
+
+                <!-- 图片 -->
+                <div
+                  v-else-if="msg.msgType === 1"
+                  class="msg-bubble msg-bubble-media"
+                  :class="{ failed: msg.status === 'failed' }"
+                >
+                  <el-image
+                    class="msg-image"
+                    fit="cover"
+                    :src="attachImageUrl(msg.content)"
+                    :preview-src-list="[attachImageUrl(msg.content)]"
+                    :preview-teleported="true"
+                    hide-on-click-modal
+                  />
+                </div>
+
+                <!-- 视频 -->
+                <div
+                  v-else-if="msg.msgType === 2"
+                  class="msg-bubble msg-bubble-media"
+                  :class="{ failed: msg.status === 'failed' }"
+                >
+                  <video
+                    class="msg-video"
+                    :src="attachImageUrl(msg.content)"
+                    controls
+                    preload="metadata"
+                  ></video>
+                </div>
+
                 <div class="msg-status">
                   <span>{{ formatTime(msg.createTime) }}</span>
                   <span v-if="isSelf(msg) && msg.status === 'sending'">· 发送中</span>
@@ -81,23 +117,60 @@
             <div v-if="!messages.length" class="empty-tip">还没有消息，先打个招呼吧</div>
           </div>
           <footer class="panel-input">
-            <el-input
-              v-model="inputText"
-              type="textarea"
-              :rows="2"
-              :maxlength="500"
-              show-word-limit
-              resize="none"
-              placeholder="输入消息（Enter 发送，Shift+Enter 换行）"
-              @keydown.enter.exact.prevent="onSend"
+            <div class="input-toolbar">
+              <button
+                class="tool-btn"
+                title="发送图片"
+                :disabled="!connected || uploading"
+                @click="triggerPickImage"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"/></svg>
+              </button>
+              <button
+                class="tool-btn"
+                title="发送视频"
+                :disabled="!connected || uploading"
+                @click="triggerPickVideo"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17 10.5V6c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-4.5l4 4v-11l-4 4z"/></svg>
+              </button>
+              <span v-if="uploading" class="upload-tip">
+                <span class="mini-spinner"></span>上传中 {{ uploadProgress }}%
+              </span>
+            </div>
+            <input
+              ref="imageInputRef"
+              class="hidden-file"
+              type="file"
+              :accept="IMAGE_ACCEPT"
+              @change="onPickImage"
             />
-            <el-button class="send-btn" type="primary" :disabled="!canSend" @click="onSend">发送</el-button>
+            <input
+              ref="videoInputRef"
+              class="hidden-file"
+              type="file"
+              :accept="VIDEO_ACCEPT"
+              @change="onPickVideo"
+            />
+            <div class="input-row">
+              <el-input
+                v-model="inputText"
+                type="textarea"
+                :rows="2"
+                :maxlength="500"
+                show-word-limit
+                resize="none"
+                placeholder="输入消息（Enter 发送，Shift+Enter 换行）"
+                @keydown.enter.exact.prevent="onSend"
+              />
+              <el-button class="send-btn" type="primary" :disabled="!canSend" @click="onSend">发送</el-button>
+            </div>
           </footer>
         </template>
         <div v-else class="panel-placeholder">
           <div class="ph-icon">💬</div>
           <div class="ph-title">选择左侧会话开始聊天</div>
-          <div class="ph-sub">或点击「发起新会话」按对方用户 ID 创建</div>
+          <div class="ph-sub">或点击「发起新会话」搜索用户开始聊天</div>
         </div>
       </section>
     </div>
@@ -180,6 +253,18 @@ const searchResults = shallowRef<any[]>([]);
 const searching = ref(false);
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 let searchSeq = 0;
+
+// 上传相关
+const imageInputRef = ref<HTMLInputElement | null>(null);
+const videoInputRef = ref<HTMLInputElement | null>(null);
+const uploading = ref(false);
+const uploadProgress = ref(0);
+const IMAGE_EXT = ["jpg", "jpeg", "png", "gif", "webp", "bmp"];
+const VIDEO_EXT = ["mp4", "webm", "mov", "m4v"];
+const IMAGE_ACCEPT = "image/jpeg,image/png,image/gif,image/webp,image/bmp";
+const VIDEO_ACCEPT = "video/mp4,video/webm,video/quicktime,video/x-m4v";
+const IMAGE_MAX = 10 * 1024 * 1024; // 10MB
+const VIDEO_MAX = 50 * 1024 * 1024; // 50MB
 
 // 缓存对端用户信息
 const peerInfoMap = reactive<Record<string, { username: string; avatar: string }>>({});
@@ -271,10 +356,104 @@ async function onSend() {
     ElMessage.warning("聊天未连接，请稍候");
     return;
   }
-  const ok = store.dispatch("sendChatMessage", { peerId: activePeerId.value, content: text });
+  const ok = store.dispatch("sendChatMessage", { peerId: activePeerId.value, content: text, msgType: 0 });
   if (ok !== false) {
     inputText.value = "";
     await scrollToBottom();
+  }
+}
+
+function triggerPickImage() {
+  if (!preCheckUpload()) return;
+  imageInputRef.value?.click();
+}
+function triggerPickVideo() {
+  if (!preCheckUpload()) return;
+  videoInputRef.value?.click();
+}
+
+function preCheckUpload(): boolean {
+  if (activePeerId.value == null) {
+    ElMessage.warning("请先选择会话");
+    return false;
+  }
+  if (!connected.value) {
+    ElMessage.warning("聊天未连接，请稍候");
+    return false;
+  }
+  if (uploading.value) {
+    ElMessage.warning("正在上传，请稍候");
+    return false;
+  }
+  return true;
+}
+
+function getExt(name: string): string {
+  const i = name.lastIndexOf(".");
+  return i < 0 ? "" : name.slice(i + 1).toLowerCase();
+}
+
+async function onPickImage(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = ""; // 允许重复选择同名文件
+  if (!file) return;
+  await uploadAndSend(file, "image");
+}
+
+async function onPickVideo(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (!file) return;
+  await uploadAndSend(file, "video");
+}
+
+async function uploadAndSend(file: File, type: "image" | "video") {
+  // 扩展名校验
+  const ext = getExt(file.name);
+  const allowed = type === "image" ? IMAGE_EXT : VIDEO_EXT;
+  if (!allowed.includes(ext)) {
+    ElMessage.error(`不支持的格式，仅允许 ${allowed.join("、")}`);
+    return;
+  }
+  // 大小校验
+  const maxSize = type === "image" ? IMAGE_MAX : VIDEO_MAX;
+  if (file.size > maxSize) {
+    const limitMB = maxSize / 1024 / 1024;
+    ElMessage.error(`文件超过 ${limitMB}MB 上限`);
+    return;
+  }
+
+  uploading.value = true;
+  uploadProgress.value = 0;
+  try {
+    const res = (await HttpManager.uploadChatMedia(file, type, (p) => {
+      uploadProgress.value = p;
+    })) as ResponseBody;
+    if (!res?.success || !res.data?.url) {
+      ElMessage.error(res?.message || "上传失败");
+      return;
+    }
+    const url: string = res.data.url;
+    const msgType: 1 | 2 = type === "image" ? 1 : 2;
+    const ok = store.dispatch("sendChatMessage", {
+      peerId: activePeerId.value,
+      content: url,
+      msgType,
+    });
+    if (ok !== false) await scrollToBottom();
+  } catch (e) {
+    console.error("[Chat] 上传失败", e);
+    const status = (e as any)?.status;
+    if (status === 413) {
+      ElMessage.error("文件过大被服务器拒绝");
+    } else {
+      ElMessage.error("上传失败");
+    }
+  } finally {
+    uploading.value = false;
+    uploadProgress.value = 0;
   }
 }
 
@@ -713,10 +892,10 @@ onUnmounted(() => {
 
 .panel-input {
   border-top: 1px solid $theme-border;
-  padding: 12px 16px 14px;
+  padding: 8px 16px 12px;
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
+  flex-direction: column;
+  gap: 6px;
 
   &:deep(.el-textarea__inner) {
     border-radius: 10px;
@@ -729,6 +908,55 @@ onUnmounted(() => {
       border-color: $color-blue-shallow;
     }
   }
+}
+
+.input-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px;
+}
+
+.tool-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: $theme-text-secondary;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease, color 0.18s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(91, 141, 239, 0.1);
+    color: $color-blue-active;
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: $color-blue-active;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+}
+
+.hidden-file {
+  display: none;
+}
+
+.input-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
 
   .send-btn {
     background: $theme-gradient;
@@ -739,6 +967,44 @@ onUnmounted(() => {
     font-weight: 500;
     height: 40px;
   }
+}
+
+/* 媒体气泡（图片/视频） */
+.msg-bubble-media {
+  padding: 4px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(31, 35, 48, 0.06);
+  border: 1px solid $theme-border;
+  overflow: hidden;
+  line-height: 0;
+
+  &.failed { border-color: rgba(255, 92, 122, 0.5); }
+}
+.msg-row.self .msg-bubble-media {
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  box-shadow: 0 6px 18px rgba(91, 141, 239, 0.18);
+}
+
+.msg-image {
+  max-width: 240px;
+  max-height: 320px;
+  border-radius: 10px;
+  display: block;
+  cursor: zoom-in;
+}
+.msg-image:deep(img) {
+  border-radius: 10px;
+  display: block;
+}
+
+.msg-video {
+  max-width: 280px;
+  max-height: 320px;
+  border-radius: 10px;
+  display: block;
+  background: #000;
 }
 
 .panel-placeholder {

@@ -96,13 +96,15 @@ class ChatSocket {
     this.retryDelay = 2000;
   }
 
-  send(toUserId: string | number, content: string): boolean {
+  send(toUserId: string | number, content: string, msgType: 0 | 1 | 2 = 0): boolean {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.warn("[Chat] 发送失败：WebSocket 未连接 readyState=" + (this.ws?.readyState ?? "null"));
       return false;
     }
     try {
-      const payload = JSON.stringify({ toUserId, content });
+      const body: Record<string, unknown> = { toUserId, content };
+      if (msgType) body.msgType = msgType;
+      const payload = JSON.stringify(body);
       console.log("[Chat] ⬆ 发送", payload);
       this.ws.send(payload);
       return true;

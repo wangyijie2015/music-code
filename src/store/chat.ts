@@ -7,6 +7,7 @@ export interface ChatMessage {
   fromUserId: number | string;
   toUserId: number | string;
   content: string;
+  msgType?: 0 | 1 | 2; // 0 文本 / 1 图片 / 2 视频
   createTime?: string;
   status?: "sending" | "sent" | "failed";
 }
@@ -156,6 +157,7 @@ export default {
               fromUserId: data.fromUserId,
               toUserId: data.toUserId,
               content: data.content,
+              msgType: (Number(data.msgType) || 0) as 0 | 1 | 2,
               createTime: data.createTime,
               status: "sent",
             };
@@ -190,22 +192,30 @@ export default {
       chatSocket.disconnect();
       commit("resetChat");
     },
-    sendChatMessage({ commit, rootGetters }, { peerId, content }: { peerId: number | string; content: string }) {
-      const text = (content || "").trim();
-      if (!text) return false;
+    sendChatMessage(
+      { commit, rootGetters },
+      {
+        peerId,
+        content,
+        msgType = 0,
+      }: { peerId: number | string; content: string; msgType?: 0 | 1 | 2 }
+    ) {
+      const raw = (content || "").trim();
+      if (!raw) return false;
       const myId = rootGetters.userId;
       const tempId = `t_${Date.now()}_${tempIdSeed++}`;
       const msg: ChatMessage = {
         tempId,
         fromUserId: myId,
         toUserId: peerId,
-        content: text,
+        content: raw,
+        msgType,
         status: "sending",
         createTime: new Date().toISOString(),
       };
       commit("appendChatMessage", { peerId, message: msg });
       commit("trackPendingMessage", { tempId, peerId });
-      const ok = chatSocket.send(peerId, text);
+      const ok = chatSocket.send(peerId, raw, msgType);
       if (!ok) {
         commit("updateChatMessageByTempId", { tempId, patch: { status: "failed" } });
         return false;
@@ -236,6 +246,7 @@ export default {
             fromUserId: m.fromUserId,
             toUserId: m.toUserId,
             content: m.content,
+            msgType: (Number(m.msgType ?? m.type) || 0) as 0 | 1 | 2,
             createTime: m.createTime,
             status: "sent" as const,
           }))

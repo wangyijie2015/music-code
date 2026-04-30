@@ -1,4 +1,4 @@
-import { getBaseURL, get, post, deletes } from "./request";
+import { getBaseURL, get, post, deletes, postForm } from "./request";
 
 const HttpManager = {
   // 获取图片信息
@@ -125,6 +125,12 @@ const HttpManager = {
   getUnreadCount: (userId) => get(`message/unread/count?userId=${userId}`),
   // 标记会话为已读
   markMessageRead: (userId, peerId) => post(`message/read?userId=${userId}&peerId=${peerId}`),
+  // 上传聊天媒体（图片 / 视频），type: "image" | "video"
+  uploadChatMedia: (file: File, type: "image" | "video", onProgress?: (p: number) => void) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return postForm(`message/upload?type=${type}`, fd, onProgress);
+  },
 };
 
 

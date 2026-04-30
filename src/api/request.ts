@@ -108,3 +108,25 @@ export function put(url, data = {}) {
     );
   });
 }
+
+/**
+ * 封装 multipart/form-data 上传
+ * 必须显式覆盖默认的 application/x-www-form-urlencoded
+ */
+export function postForm(url, formData: FormData, onProgress?: (percent: number) => void) {
+  return new Promise((resolve, reject) => {
+    axios
+      .post(url, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) {
+            onProgress(Math.round((e.loaded * 100) / e.total));
+          }
+        },
+      })
+      .then(
+        (response) => resolve(response.data),
+        (error) => reject(error)
+      );
+  });
+}
