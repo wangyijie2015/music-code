@@ -55,23 +55,25 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import "@/assets/css/var.scss";
+
 .loading-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 300px;
-  color: #999;
+  color: $theme-text-secondary;
   gap: 16px;
   font-size: 14px;
 }
 
 .loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #00a1d6;
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(91, 141, 239, 0.2);
+  border-top-color: $color-blue-active;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

@@ -187,16 +187,16 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   min-height: 300px;
-  color: #999;
+  color: $theme-text-secondary;
   gap: 16px;
   font-size: 14px;
 }
 
 .loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #00a1d6;
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(91, 141, 239, 0.2);
+  border-top-color: $color-blue-active;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -207,12 +207,24 @@ export default defineComponent({
   display: flex;
   gap: 20px;
   align-items: flex-start;
-  margin-top: 16px;
+  margin-top: 20px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $theme-border;
 }
 
 .mv-info {
   flex: 1;
   min-width: 0;
+}
+
+.mv-meta {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: $color-light-grey;
+  border-radius: 10px;
 }
 
 .meta-row {
@@ -222,21 +234,24 @@ export default defineComponent({
   font-size: 13px;
   line-height: 1.6;
 }
+.meta-row:first-child {
+  margin-top: 0;
+}
 
 .meta-label {
-  color: #999;
-  width: 40px;
+  color: $theme-text-secondary;
+  width: 50px;
   flex-shrink: 0;
 }
 
 .meta-value {
-  color: #333;
+  color: $theme-text-primary;
   word-break: break-all;
 }
 
 .meta-value.intro-text {
-  color: #666;
-  font-size: 12px;
+  color: $theme-text-secondary;
+  font-size: 13px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -244,22 +259,23 @@ export default defineComponent({
 }
 
 .mv-side {
-  width: 160px;
+  width: 170px;
   flex-shrink: 0;
 
   .mv-cover {
     width: 100%;
-    border-radius: 8px;
+    border-radius: 10px;
     aspect-ratio: 16/9;
     object-fit: cover;
+    box-shadow: $shadow-sm;
   }
 }
 
 .mv-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .action-btn {
@@ -267,31 +283,34 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
+  padding: 9px 12px;
+  border: 1px solid $theme-border;
+  border-radius: 999px;
   background: #fff;
   font-size: 13px;
-  color: #666;
+  color: $theme-text-secondary;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   line-height: 1;
 }
 
 .action-btn:hover {
-  background: #f5f5f5;
-  border-color: #ccc;
+  background: rgba(91, 141, 239, 0.06);
+  border-color: $color-blue-shallow;
+  color: $color-blue-active;
+  transform: translateY(-1px);
 }
 
 .action-btn.active {
-  background: #f0f9ff;
-  border-color: #00a1d6;
-  color: #00a1d6;
+  background: rgba(91, 141, 239, 0.12);
+  border-color: $color-blue-active;
+  color: $color-blue-active;
+  font-weight: 500;
 }
 
 .action-btn .count {
   font-size: 12px;
-  opacity: 0.7;
+  opacity: 0.75;
   margin-left: 2px;
 }
 
@@ -303,9 +322,10 @@ export default defineComponent({
 .section {
   margin-top: 24px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: $shadow-sm;
+  border: 1px solid $theme-border;
 }
 
 @media screen and (max-width: $sm) {

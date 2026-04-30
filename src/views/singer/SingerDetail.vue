@@ -106,6 +106,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import "@/assets/css/var.scss";
+
 .singer-page {
   max-width: 900px;
   margin: 0 auto;
@@ -115,9 +117,10 @@ export default defineComponent({
 /* 头部区域 */
 .singer-header {
   position: relative;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   margin-top: 20px;
+  box-shadow: $shadow-md;
 }
 
 .header-bg {
@@ -125,8 +128,15 @@ export default defineComponent({
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: blur(40px) brightness(0.6);
+  filter: blur(40px) brightness(0.55);
   transform: scale(1.2);
+}
+
+.header-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(108, 141, 255, 0.55), rgba(197, 108, 255, 0.45));
 }
 
 .header-content {
@@ -134,25 +144,31 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 30px;
-  padding: 40px 30px;
+  padding: 44px 30px;
   z-index: 1;
 }
 
 .singer-avatar {
-  width: 160px;
-  height: 160px;
+  width: 170px;
+  height: 170px;
   border-radius: 50%;
-  border: 4px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 4px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
   flex-shrink: 0;
+  transition: transform 0.4s ease;
+}
+.singer-avatar:hover {
+  transform: scale(1.04);
 }
 
 .singer-meta {
   color: #fff;
   h1 {
-    font-size: 28px;
-    margin: 0 0 12px;
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0 0 14px;
     color: #fff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
   }
 }
 
@@ -164,33 +180,48 @@ export default defineComponent({
 
 .tag {
   display: inline-block;
-  padding: 4px 14px;
-  background: rgba(255, 255, 255, 0.2);
+  padding: 5px 14px;
+  background: rgba(255, 255, 255, 0.22);
   border-radius: 20px;
   font-size: 13px;
   color: #fff;
-  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* 通用区块 */
 .section {
-  margin-top: 28px;
+  margin-top: 24px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: $shadow-sm;
+  border: 1px solid $theme-border;
 }
 
 .section-title {
   font-size: 18px;
-  color: #333;
+  font-weight: 600;
+  color: $theme-text-primary;
   margin: 0 0 16px;
   padding-left: 12px;
-  border-left: 3px solid #00a1d6;
+  position: relative;
+}
+
+.section-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 4px;
+  background: $theme-gradient;
 }
 
 .intro-text {
-  color: #666;
+  color: $theme-text-secondary;
   font-size: 14px;
   line-height: 1.8;
   margin: 0;
@@ -203,16 +234,16 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   min-height: 300px;
-  color: #999;
+  color: $theme-text-secondary;
   gap: 16px;
   font-size: 14px;
 }
 
 .loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #00a1d6;
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(91, 141, 239, 0.2);
+  border-top-color: $color-blue-active;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

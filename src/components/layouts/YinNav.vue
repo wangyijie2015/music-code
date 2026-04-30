@@ -33,31 +33,45 @@ export default defineComponent({
 
 .yin-nav {
   width: 100%;
+  padding: 18px 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   li {
     line-height: 2rem;
-    font-size: 1rem;
-    color: $color-grey;
-    border-bottom: none;
+    font-size: 0.92rem;
+    color: $theme-text-secondary;
     cursor: pointer;
+    padding: 4px 16px;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+  }
+  li:hover {
+    color: $color-blue-active;
+    background: rgba(91, 141, 239, 0.08);
   }
   li.active {
-    color: $color-black;
-    font-weight: 600;
+    color: #fff;
+    font-weight: 500;
+    background: $theme-gradient;
+    box-shadow: 0 4px 12px rgba(91, 141, 239, 0.3);
   }
 }
 
 @media screen and (min-width: $sm) {
   .yin-nav {
     li {
-      margin: 0.5rem 1rem;
+      margin: 0;
     }
   }
 }
 
 @media screen and (max-width: $sm) {
   .yin-nav {
+    padding: 12px 4px;
     li {
-      margin: 0.3rem 0.4rem;
+      font-size: 0.85rem;
+      padding: 4px 12px;
     }
   }
 }

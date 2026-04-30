@@ -122,26 +122,51 @@ export default defineComponent({
 .content {
   background-color: $color-white;
   border-radius: $border-radius-songlist;
-  padding: 10px;
+  padding: 4px;
+}
+
+.content:deep(.el-table) {
+  background: transparent;
+  --el-table-border-color: transparent;
+  --el-table-row-hover-bg-color: rgba(91, 141, 239, 0.06);
+}
+
+.content:deep(.el-table th.el-table__cell) {
+  background: transparent !important;
+  color: $theme-text-secondary;
+  font-weight: 500;
+  border-bottom: 1px solid $theme-border;
+}
+
+.content:deep(.el-table td.el-table__cell) {
+  border-bottom: 1px solid rgba(31, 35, 48, 0.04);
 }
 
 .content:deep(.el-table__row.current-row) {
-  color: $color-black;
-  font-weight: bold;
+  color: $color-blue-active !important;
+  font-weight: 600;
+  background: rgba(91, 141, 239, 0.06) !important;
 }
 
 .content:deep(.el-table__row) {
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .icon {
-  @include icon(1.2em, $color-black);
+  @include icon(1.2em, $theme-text-secondary);
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.icon:hover {
+  color: $color-blue-active;
+  transform: scale(1.1);
 }
 
 .empty-hint {
   text-align: center;
-  padding: 40px 0;
-  color: #999;
+  padding: 50px 0;
+  color: $theme-text-secondary;
   font-size: 14px;
 }
 </style>

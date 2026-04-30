@@ -201,6 +201,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import "@/assets/css/var.scss";
+
 .sheet-page {
   max-width: 900px;
   margin: 0 auto;
@@ -210,9 +212,10 @@ export default defineComponent({
 /* 头部 */
 .sheet-header {
   position: relative;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   margin-top: 20px;
+  box-shadow: $shadow-md;
 }
 
 .header-bg {
@@ -222,6 +225,13 @@ export default defineComponent({
   background-position: center;
   filter: blur(40px) brightness(0.6);
   transform: scale(1.2);
+}
+
+.header-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(91, 141, 239, 0.55), rgba(197, 108, 255, 0.45));
 }
 
 .header-content {
@@ -234,12 +244,17 @@ export default defineComponent({
 }
 
 .sheet-cover {
-  width: 160px;
-  height: 160px;
-  border-radius: 12px;
-  border: 4px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  width: 180px;
+  height: 180px;
+  border-radius: 14px;
+  border: 4px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
   flex-shrink: 0;
+  transition: transform 0.4s ease;
+}
+
+.sheet-cover:hover {
+  transform: scale(1.04);
 }
 
 .sheet-meta {
@@ -247,9 +262,11 @@ export default defineComponent({
   min-width: 0;
 
   h1 {
-    font-size: 24px;
-    margin: 0 0 10px;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 14px;
     color: #fff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
   }
 }
 
@@ -257,22 +274,22 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .rating-score {
   font-size: 20px;
   font-weight: 600;
-  color: #ffd700;
+  color: #ffd86b;
 }
 
 .sheet-intro {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
   line-height: 1.6;
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -281,24 +298,38 @@ export default defineComponent({
 .section {
   margin-top: 24px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: $shadow-sm;
+  border: 1px solid $theme-border;
 }
 
 .section-title {
   font-size: 18px;
-  color: #333;
-  margin: 0 0 16px;
+  font-weight: 600;
+  color: $theme-text-primary;
+  margin: 0 0 18px;
   padding-left: 12px;
-  border-left: 3px solid #00a1d6;
+  position: relative;
+}
+
+.section-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 4px;
+  background: $theme-gradient;
 }
 
 /* 评分区 */
 .rating-area {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 28px;
+  padding: 6px 0;
 }
 
 .rating-left {
@@ -310,13 +341,16 @@ export default defineComponent({
 .score-num {
   font-size: 48px;
   font-weight: 700;
-  color: #ffa500;
+  background: linear-gradient(135deg, #ffb648 0%, #ff5c7a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   line-height: 1;
 }
 
 .score-label {
   font-size: 16px;
-  color: #999;
+  color: $theme-text-secondary;
 }
 
 .rating-right {
@@ -327,7 +361,7 @@ export default defineComponent({
 
 .rating-text {
   font-size: 13px;
-  color: #999;
+  color: $theme-text-secondary;
 }
 
 .loading-wrap, .empty-wrap {
@@ -336,16 +370,16 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   min-height: 300px;
-  color: #999;
+  color: $theme-text-secondary;
   gap: 16px;
   font-size: 14px;
 }
 
 .loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #00a1d6;
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(91, 141, 239, 0.2);
+  border-top-color: $color-blue-active;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
