@@ -15,6 +15,8 @@ const HttpManager = {
   updateUserPassword: ({id,username,oldPassword,password}) => post(`user/updatePassword`, {id,username,oldPassword,password}),
   // 返回指定ID的用户
   getUserOfId: (id) => get(`user/detail?id=${id}`),
+  // 通过 ID 或用户名模糊搜索用户（最多 20 条，password 已置空）
+  searchUser: (keyword) => get(`user/search?keyword=${encodeURIComponent(keyword ?? "")}`),
   // 更新用户头像
   uploadUrl: (userId) => `${getBaseURL()}/user/avatar/update?id=${userId}`,
 

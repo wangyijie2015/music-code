@@ -103,24 +103,54 @@
     </div>
 
     <!-- 新会话对话框 -->
-    <el-dialog v-model="newChatDialog" title="发起新会话" width="360px">
-      <el-form @submit.prevent>
-        <el-form-item label="对方用户 ID">
-          <el-input v-model="newPeerId" placeholder="请输入对方用户 ID" type="number" />
-        </el-form-item>
-      </el-form>
+    <el-dialog v-model="newChatDialog" title="发起新会话" width="420px">
+      <el-input
+        v-model="searchKeyword"
+        placeholder="输入用户 ID 或用户名搜索"
+        clearable
+        :prefix-icon="SearchIcon"
+        @input="onSearchInput"
+        @keyup.enter="doSearchNow"
+      />
+      <div class="search-result-area">
+        <div v-if="searching" class="search-state">
+          <span class="mini-spinner"></span>搜索中...
+        </div>
+        <div v-else-if="!searchKeyword.trim()" class="search-state muted">
+          请输入用户 ID 或用户名开始搜索
+        </div>
+        <div v-else-if="!searchResults.length" class="search-state muted">
+          没有找到匹配的用户
+        </div>
+        <ul v-else class="result-list">
+          <li
+            v-for="u in searchResults"
+            :key="u.id"
+            class="result-item"
+            :class="{ self: String(u.id) === String(userId) }"
+            @click="pickUser(u)"
+          >
+            <el-image class="result-avatar" fit="cover" :src="attachImageUrl(u.avator)" />
+            <div class="result-meta">
+              <div class="result-name">{{ u.username }}</div>
+              <div class="result-id">ID：{{ u.id }}</div>
+            </div>
+            <span v-if="String(u.id) === String(userId)" class="self-tag">自己</span>
+          </li>
+        </ul>
+      </div>
       <template #footer>
-        <el-button @click="newChatDialog = false">取消</el-button>
-        <el-button type="primary" @click="confirmNewChat">确定</el-button>
+        <el-button @click="newChatDialog = false">关闭</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, watch, nextTick, reactive } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch, nextTick, reactive, shallowRef } from "vue";
 import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
+import { Search as SearchIcon } from "@element-plus/icons-vue";
 
 import mixin from "@/mixins/mixin";
 import { HttpManager } from "@/api";
@@ -145,7 +175,11 @@ const currentPage = ref(1);
 const pageSize = 20;
 
 const newChatDialog = ref(false);
-const newPeerId = ref("");
+const searchKeyword = ref("");
+const searchResults = shallowRef<any[]>([]);
+const searching = ref(false);
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+let searchSeq = 0;
 
 // 缓存对端用户信息
 const peerInfoMap = reactive<Record<string, { username: string; avatar: string }>>({});
@@ -251,42 +285,70 @@ async function scrollToBottom() {
 }
 
 function openNewChat() {
-  newPeerId.value = "";
+  searchKeyword.value = "";
+  searchResults.value = [];
+  searching.value = false;
   newChatDialog.value = true;
 }
 
-async function confirmNewChat() {
-  const id = String(newPeerId.value).trim();
-  if (!id) {
-    ElMessage.warning("请输入对方用户 ID");
+function onSearchInput() {
+  if (searchTimer) clearTimeout(searchTimer);
+  const kw = searchKeyword.value.trim();
+  if (!kw) {
+    searchResults.value = [];
+    searching.value = false;
     return;
   }
-  if (id === String(userId.value)) {
+  searchTimer = setTimeout(() => doSearchNow(), 300);
+}
+
+async function doSearchNow() {
+  if (searchTimer) {
+    clearTimeout(searchTimer);
+    searchTimer = null;
+  }
+  const kw = searchKeyword.value.trim();
+  if (!kw) {
+    searchResults.value = [];
+    searching.value = false;
+    return;
+  }
+  const seq = ++searchSeq;
+  searching.value = true;
+  try {
+    const res = (await HttpManager.searchUser(kw)) as ResponseBody;
+    if (seq !== searchSeq) return; // 丢弃过期请求
+    const list = Array.isArray(res?.data) ? res.data : [];
+    searchResults.value = list;
+  } catch (e) {
+    if (seq === searchSeq) {
+      searchResults.value = [];
+      ElMessage.error("搜索失败");
+    }
+  } finally {
+    if (seq === searchSeq) searching.value = false;
+  }
+}
+
+async function pickUser(u: any) {
+  if (!u || u.id == null) return;
+  if (String(u.id) === String(userId.value)) {
     ElMessage.warning("不能和自己聊天");
     return;
   }
-  // 校验用户存在
-  try {
-    const res = (await HttpManager.getUserOfId(id)) as ResponseBody;
-    if (!res?.data?.[0]) {
-      ElMessage.error("用户不存在");
-      return;
-    }
-    peerInfoMap[id] = { username: res.data[0].username, avatar: res.data[0].avator };
-  } catch {
-    ElMessage.error("查询用户失败");
-    return;
-  }
+  const id = u.id;
+  // 写入本地用户信息缓存（避免再 ensurePeerInfo 多发一次请求）
+  peerInfoMap[String(id)] = { username: u.username, avatar: u.avator };
   newChatDialog.value = false;
-  // 把伙伴并入会话列表（如果不在）
+  // 并入会话列表（若不在）
   const exists = (conversations.value || []).some((c: any) => {
     const pid = typeof c === "object" ? (c.peerId ?? c.userId ?? c.id) : c;
-    return String(pid) === id;
+    return String(pid) === String(id);
   });
   if (!exists) {
-    store.commit("setChatConversations", [...(conversations.value || []), { peerId: Number(id) }]);
+    store.commit("setChatConversations", [...(conversations.value || []), { peerId: id }]);
   }
-  await onSelectPeer(Number(id));
+  await onSelectPeer(id);
 }
 
 function formatTime(t?: string) {
@@ -713,5 +775,96 @@ onUnmounted(() => {
     width: 100%;
     max-height: 240px;
   }
+}
+
+/* ============ 搜索对话框 ============ */
+.search-result-area {
+  margin-top: 14px;
+  min-height: 80px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.search-state {
+  text-align: center;
+  padding: 26px 0;
+  font-size: 13px;
+  color: $theme-text-secondary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  &.muted { opacity: 0.85; }
+}
+
+.mini-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(91, 141, 239, 0.2);
+  border-top-color: $color-blue-active;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.result-list {
+  display: block;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+
+  &:hover {
+    background: rgba(91, 141, 239, 0.08);
+  }
+  &.self {
+    cursor: not-allowed;
+    opacity: 0.55;
+    &:hover { background: transparent; }
+  }
+}
+
+.result-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: $color-light-grey;
+}
+
+.result-meta {
+  flex: 1;
+  min-width: 0;
+  .result-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: $theme-text-primary;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .result-id {
+    font-size: 12px;
+    color: $theme-text-secondary;
+    margin-top: 2px;
+  }
+}
+
+.self-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: $color-light-grey;
+  color: $theme-text-secondary;
+  flex-shrink: 0;
 }
 </style>
