@@ -20,7 +20,29 @@ interface ChatState {
   unreadByPeer: Record<string, number>;
   unreadTotal: number;
   pendingQueue: { tempId: string; peerId: string }[]; // FIFO 等待 ack
+  hiddenPeerIds: string[]; // 本地隐藏的会话伙伴 ID（仅前端展示过滤）
   bound: boolean;
+}
+
+const HIDDEN_LS_PREFIX = "music_chat_hidden_v1_";
+
+function loadHiddenFromLs(userId: string | number | null | undefined): string[] {
+  if (userId === undefined || userId === null || userId === "") return [];
+  try {
+    const raw = localStorage.getItem(HIDDEN_LS_PREFIX + userId);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.map((x) => String(x)) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHiddenToLs(userId: string | number | null | undefined, ids: string[]) {
+  if (userId === undefined || userId === null || userId === "") return;
+  try {
+    localStorage.setItem(HIDDEN_LS_PREFIX + userId, JSON.stringify(ids));
+  } catch { /* ignore */ }
 }
 
 let tempIdSeed = 1;
@@ -34,6 +56,7 @@ export default {
     unreadByPeer: {},
     unreadTotal: 0,
     pendingQueue: [],
+    hiddenPeerIds: [],
     bound: false,
   }),
   getters: {
@@ -45,6 +68,7 @@ export default {
     chatUnreadTotal: (s: ChatState) => s.unreadTotal,
     chatActiveMessages: (s: ChatState) =>
       s.activePeerId != null ? s.messagesByPeer[String(s.activePeerId)] || [] : [],
+    chatHiddenPeerIds: (s: ChatState) => s.hiddenPeerIds,
   },
   mutations: {
     setChatConnected(s: ChatState, v: boolean) {
@@ -117,9 +141,21 @@ export default {
       s.unreadByPeer = {};
       s.unreadTotal = 0;
       s.pendingQueue = [];
+      s.hiddenPeerIds = [];
     },
     setChatBound(s: ChatState, v: boolean) {
       s.bound = v;
+    },
+    setHiddenPeerIds(s: ChatState, ids: string[]) {
+      s.hiddenPeerIds = (ids || []).map((x) => String(x));
+    },
+    addHiddenPeer(s: ChatState, peerId: string | number) {
+      const id = String(peerId);
+      if (!s.hiddenPeerIds.includes(id)) s.hiddenPeerIds.push(id);
+    },
+    removeHiddenPeer(s: ChatState, peerId: string | number) {
+      const id = String(peerId);
+      s.hiddenPeerIds = s.hiddenPeerIds.filter((x) => x !== id);
     },
   },
   actions: {
@@ -132,6 +168,7 @@ export default {
         switch (data.type) {
           case "open":
             commit("setChatConnected", true);
+            dispatch("loadHiddenPeers");
             dispatch("refreshUnreadTotal");
             dispatch("loadConversations");
             break;
@@ -162,6 +199,10 @@ export default {
               status: "sent",
             };
             commit("appendChatMessage", { peerId, message: incoming });
+            // 收到隐藏会话的新消息：自动取消隐藏，让会话回来
+            if (state.hiddenPeerIds.includes(String(peerId))) {
+              dispatch("restorePeer", peerId);
+            }
             const isFromOther = String(data.fromUserId) !== String(myId);
             const isActive = String(state.activePeerId) === String(peerId);
             if (isFromOther && !isActive) {
@@ -277,6 +318,27 @@ export default {
       } catch (e) {
         console.error("[Chat] 标记已读失败", e);
       }
+    },
+    /** 加载当前用户的本地隐藏会话列表 */
+    loadHiddenPeers({ commit, rootGetters }) {
+      const ids = loadHiddenFromLs(rootGetters.userId);
+      commit("setHiddenPeerIds", ids);
+    },
+    /** 隐藏指定会话（仅前端，不影响后端数据） */
+    hidePeer({ commit, state, rootGetters }, peerId: number | string) {
+      if (peerId == null) return;
+      commit("addHiddenPeer", peerId);
+      saveHiddenToLs(rootGetters.userId, state.hiddenPeerIds);
+      // 如果当前正在和该用户聊天，关闭会话面板
+      if (String(state.activePeerId) === String(peerId)) {
+        commit("setChatActivePeerId", null);
+      }
+    },
+    /** 恢复显示某个被隐藏的会话 */
+    restorePeer({ commit, state, rootGetters }, peerId: number | string) {
+      if (peerId == null) return;
+      commit("removeHiddenPeer", peerId);
+      saveHiddenToLs(rootGetters.userId, state.hiddenPeerIds);
     },
     async openConversation({ commit, dispatch }, peerId: number | string) {
       commit("setChatActivePeerId", peerId);

@@ -41,6 +41,15 @@
                 />
               </div>
             </div>
+            <button
+              class="conv-remove"
+              title="从列表移除（仅本地隐藏，消息保留）"
+              @click.stop="onHideConv(conv.peerId)"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
           </li>
           <li v-if="!convDisplayList.length" class="conv-empty">暂无会话，点击上方按钮发起聊天</li>
         </ul>
@@ -232,7 +241,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref, watch, nextTick, reactive, shallowRef } from "vue";
 import { useStore } from "vuex";
-import { ElMessage, ElImageViewer } from "element-plus";
+import { ElMessage, ElImageViewer, ElMessageBox } from "element-plus";
 import { Search as SearchIcon } from "@element-plus/icons-vue";
 
 import mixin from "@/mixins/mixin";
@@ -310,24 +319,32 @@ const activePeerInfo = computed(() => {
   return peerInfoMap[String(activePeerId.value)] || { username: "", avatar: "" };
 });
 
-// 会话列表展示数据：把会话伙伴 ID 列表附加上用户名/头像/最近消息
+const hiddenPeerIds = computed<string[]>(() => store.getters.chatHiddenPeerIds);
+
+// 会话列表展示数据：把会话伙伴 ID 列表附加上用户名/头像/最近消息，并过滤本地隐藏的
 const convDisplayList = computed(() => {
-  return (conversations.value || []).map((c: any) => {
-    const peerId = typeof c === "object" ? (c.peerId ?? c.userId ?? c.id) : c;
-    const info = peerInfoMap[String(peerId)] || {};
-    const lastMsg = (() => {
-      const arr = store.getters.chatMessagesByPeer[String(peerId)];
-      if (arr && arr.length) return arr[arr.length - 1];
-      return null;
-    })();
-    return {
-      peerId,
-      username: info.username,
-      avatar: info.avatar,
-      lastContent: lastMsg?.content || (typeof c === "object" ? c.lastContent : ""),
-      lastTime: lastMsg?.createTime || (typeof c === "object" ? c.lastTime : ""),
-    };
-  });
+  const hidden = new Set(hiddenPeerIds.value);
+  return (conversations.value || [])
+    .map((c: any) => {
+      const peerId = typeof c === "object" ? (c.peerId ?? c.userId ?? c.id) : c;
+      return { peerId, raw: c };
+    })
+    .filter(({ peerId }) => peerId != null && !hidden.has(String(peerId)))
+    .map(({ peerId, raw }) => {
+      const info = peerInfoMap[String(peerId)] || {};
+      const lastMsg = (() => {
+        const arr = store.getters.chatMessagesByPeer[String(peerId)];
+        if (arr && arr.length) return arr[arr.length - 1];
+        return null;
+      })();
+      return {
+        peerId,
+        username: info.username,
+        avatar: info.avatar,
+        lastContent: lastMsg?.content || (typeof raw === "object" ? raw.lastContent : ""),
+        lastTime: lastMsg?.createTime || (typeof raw === "object" ? raw.lastTime : ""),
+      };
+    });
 });
 
 const canSend = computed(() => connected.value && inputText.value.trim().length > 0 && activePeerId.value != null);
@@ -359,6 +376,20 @@ async function onSelectPeer(peerId: number | string) {
   noMore.value = false;
   await store.dispatch("openConversation", peerId);
   await scrollToBottom();
+}
+
+async function onHideConv(peerId: number | string) {
+  try {
+    await ElMessageBox.confirm(
+      "将该会话从列表移除？\n（仅本地隐藏，消息不会被删除，对方再发消息会自动恢复显示）",
+      "移除会话",
+      { confirmButtonText: "移除", cancelButtonText: "取消", type: "info" }
+    );
+  } catch {
+    return; // 取消
+  }
+  store.dispatch("hidePeer", peerId);
+  ElMessage.success("已从列表移除");
 }
 
 async function loadMore() {
@@ -555,6 +586,10 @@ async function pickUser(u: any) {
   // 写入本地用户信息缓存（避免再 ensurePeerInfo 多发一次请求）
   peerInfoMap[String(id)] = { username: u.username, avatar: u.avator };
   newChatDialog.value = false;
+  // 如果该用户被本地隐藏过，自动恢复显示
+  if (hiddenPeerIds.value.includes(String(id))) {
+    store.dispatch("restorePeer", id);
+  }
   // 并入会话列表（若不在）
   const exists = (conversations.value || []).some((c: any) => {
     const pid = typeof c === "object" ? (c.peerId ?? c.userId ?? c.id) : c;
@@ -616,6 +651,7 @@ onMounted(() => {
     store.dispatch("connectChat");
   }
   if (authToken.value) {
+    store.dispatch("loadHiddenPeers");
     store.dispatch("loadConversations");
     store.dispatch("refreshUnreadTotal");
   }
@@ -724,6 +760,7 @@ onUnmounted(() => {
 }
 
 .conv-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -734,9 +771,33 @@ onUnmounted(() => {
 
   &:hover {
     background: rgba(91, 141, 239, 0.06);
+    .conv-remove { opacity: 1; }
   }
   &.active {
     background: rgba(91, 141, 239, 0.12);
+  }
+}
+
+.conv-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: rgba(31, 35, 48, 0.06);
+  color: $theme-text-secondary;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.18s ease, background 0.18s ease, color 0.18s ease;
+
+  &:hover {
+    background: rgba(255, 92, 122, 0.12);
+    color: $color-red;
   }
 }
 
