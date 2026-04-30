@@ -1,14 +1,16 @@
 <template>
-  <!--轮播图-->
-  <el-carousel v-if="swiperList.length" class="swiper-container" type="card" height="20vw" :interval="4000">
-    <el-carousel-item v-for="(item, index) in swiperList" :key="index">
-      <img :src="HttpManager.attachImageUrl(item.pic)" />
-    </el-carousel-item>
-  </el-carousel>
+  <div class="home-hero">
+    <!--轮播图-->
+    <el-carousel v-if="swiperList.length" class="swiper-container" type="card" height="22vw" :interval="4000" indicator-position="outside">
+      <el-carousel-item v-for="(item, index) in swiperList" :key="index">
+        <img :src="HttpManager.attachImageUrl(item.pic)" />
+      </el-carousel-item>
+    </el-carousel>
+  </div>
   <!--热门歌单-->
-  <play-list class="play-list-container" title="歌单" path="song-sheet-detail" :playList="songList"></play-list>
+  <play-list class="play-list-container" title="精选歌单" subtitle="为你推荐的热门歌单" path="song-sheet-detail" :playList="songList"></play-list>
   <!--热门歌手-->
-  <play-list class="play-list-container" title="歌手" path="singer-detail" :playList="singerList"></play-list>
+  <play-list class="play-list-container" title="热门歌手" subtitle="发现你喜欢的音乐人" path="singer-detail" :playList="singerList"></play-list>
 </template>
 
 <script lang="ts" setup>
@@ -44,19 +46,49 @@ onMounted(() => {
 <style lang="scss" scoped>
 @import "@/assets/css/var.scss";
 
+.home-hero {
+  position: relative;
+  padding: 30px 0 10px;
+}
+
 /*轮播图*/
 .swiper-container {
   width: 90%;
   margin: auto;
-  padding-top: 20px;
   img {
     width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
   }
 }
 
-.swiper-container:deep(.el-carousel__indicators.el-carousel__indicators--outside) {
-  display: inline-block;
-  transform: translateX(30vw);
+.swiper-container:deep(.el-carousel__item) {
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: $shadow-md;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.swiper-container:deep(.el-carousel__item.is-active) {
+  box-shadow: $shadow-lg;
+}
+
+.swiper-container:deep(.el-carousel__indicators--outside) {
+  margin-top: 14px;
+}
+
+.swiper-container:deep(.el-carousel__indicator--horizontal .el-carousel__button) {
+  width: 22px;
+  height: 4px;
+  border-radius: 4px;
+  background-color: rgba(31, 35, 48, 0.2);
+  opacity: 1;
+}
+
+.swiper-container:deep(.el-carousel__indicator.is-active .el-carousel__button) {
+  width: 32px;
+  background: $theme-gradient;
 }
 
 .el-slider__runway {

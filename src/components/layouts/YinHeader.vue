@@ -136,7 +136,10 @@ export default defineComponent({
   padding: $header-padding;
   margin: $header-margin;
   background-color: $theme-header-color;
-  box-shadow: $box-shadow;
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid $theme-border;
+  box-shadow: 0 1px 0 rgba(31, 35, 48, 0.04);
   box-sizing: border-box;
   z-index: 100;
   display: flex;
@@ -147,14 +150,28 @@ export default defineComponent({
 /* LOGO */
 .header-logo {
   font-size: $font-size-logo;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: $theme-gradient;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: opacity 0.2s ease;
+
   .icon {
-    @include icon(1.9rem, $color-black);
+    @include icon(1.9rem, $color-blue-active);
     vertical-align: middle;
+    -webkit-text-fill-color: $color-blue-active;
   }
   span {
-    margin-left: 1rem;
+    margin-left: 0;
+  }
+
+  &:hover {
+    opacity: 0.85;
   }
 }
 
@@ -166,13 +183,25 @@ export default defineComponent({
 .header-search {
   margin: 0 20px;
   width: 100%;
-  &::v-deep input {
-    text-indent: 5px;
+  display: flex;
+  align-items: center;
+  &:deep(.el-input__wrapper) {
     max-width: $header-search-max-width;
     min-width: $header-search-min-width;
-    border-radius: $header-search-radius;
-    box-shadow: none;
+    border-radius: 999px;
+    box-shadow: none !important;
     background-color: $color-light-grey;
+    border: 1px solid transparent;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    padding: 0 16px;
+  }
+  &:deep(.el-input__wrapper.is-focus),
+  &:deep(.el-input__wrapper:hover) {
+    background-color: #fff;
+    border-color: $color-blue-shallow;
+    box-shadow: 0 4px 14px rgba(91, 141, 239, 0.15) !important;
+  }
+  &:deep(.el-input__inner) {
     color: $color-black;
   }
 }
@@ -189,6 +218,13 @@ export default defineComponent({
     border-radius: $header-user-radius;
     margin-right: $header-user-margin;
     cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 14px rgba(31, 35, 48, 0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .user:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 18px rgba(91, 141, 239, 0.35);
   }
 }
 </style>

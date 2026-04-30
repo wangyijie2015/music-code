@@ -61,7 +61,13 @@ window.addEventListener("beforeunload", () => {
   padding: 0;
 }
 .el-main {
+  padding-top: $header-height + 10px;
   padding-left: 0;
   padding-right: 0;
+  background: transparent;
+}
+.el-footer {
+  padding: 0;
+  height: auto;
 }
 </style>

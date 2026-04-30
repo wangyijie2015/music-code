@@ -31,18 +31,45 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import "@/assets/css/var.scss";
 
+.yin-header-nav {
+  display: flex;
+  align-items: center;
+}
+
 li {
+  position: relative;
   margin: $header-nav-margin;
   padding: $header-nav-padding;
   line-height: 3.3rem;
-  color: $color-grey;
-  border-bottom: none;
+  color: $theme-text-secondary;
   cursor: pointer;
+  font-size: 15px;
+  transition: color 0.2s ease;
+}
+
+li::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  width: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: $theme-gradient;
+  transform: translateX(-50%);
+  transition: width 0.25s ease;
+}
+
+li:hover {
+  color: $theme-text-primary;
 }
 
 li.active {
-  color: $color-black;
+  color: $theme-text-primary;
   font-weight: 600;
-  border-bottom: 5px solid $color-black;
+}
+
+li.active::after {
+  width: 28px;
 }
 </style>

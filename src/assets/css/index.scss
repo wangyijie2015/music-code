@@ -45,10 +45,37 @@ html, body, #app {
   height: 100%;
 }
 
+body {
+  font-family: $font-family;
+  color: $theme-text-primary;
+  background:
+    radial-gradient(1100px 600px at 90% -10%, rgba(197, 108, 255, 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(108, 141, 255, 0.14), transparent 60%),
+    $theme-background-color;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 ul,
 li {
   list-style: none;
   display: inline-block;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(31, 35, 48, 0.18);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(31, 35, 48, 0.32);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .pagination {
@@ -65,4 +92,10 @@ li {
 /*el*/
 .el-select-dropdown__item {
   display: block !important;
+}
+
+.el-pagination.is-background .el-pager li:not(.is-disabled).is-active {
+  background: $theme-gradient !important;
+  color: #fff !important;
+  border-radius: 6px;
 }
