@@ -71,30 +71,30 @@
               <div class="msg-bubble-wrap">
                 <!-- 文本 -->
                 <div
-                  v-if="!msg.msgType"
+                  v-if="resolvedType(msg) === 0"
                   class="msg-bubble"
                   :class="{ failed: msg.status === 'failed' }"
                 >{{ msg.content }}</div>
 
                 <!-- 图片 -->
                 <div
-                  v-else-if="msg.msgType === 1"
+                  v-else-if="resolvedType(msg) === 1"
                   class="msg-bubble msg-bubble-media"
                   :class="{ failed: msg.status === 'failed' }"
                 >
-                  <el-image
+                  <img
                     class="msg-image"
-                    fit="cover"
                     :src="attachImageUrl(msg.content)"
-                    :preview-src-list="[attachImageUrl(msg.content)]"
-                    :preview-teleported="true"
-                    hide-on-click-modal
+                    alt="图片消息"
+                    loading="lazy"
+                    @click="previewImage(attachImageUrl(msg.content))"
+                    @error="onMediaError($event)"
                   />
                 </div>
 
                 <!-- 视频 -->
                 <div
-                  v-else-if="msg.msgType === 2"
+                  v-else-if="resolvedType(msg) === 2"
                   class="msg-bubble msg-bubble-media"
                   :class="{ failed: msg.status === 'failed' }"
                 >
@@ -175,6 +175,16 @@
       </section>
     </div>
 
+    <!-- 图片预览层 -->
+    <el-image-viewer
+      v-if="previewSrc"
+      :url-list="[previewSrc]"
+      :z-index="3000"
+      teleported
+      hide-on-click-modal
+      @close="previewSrc = ''"
+    />
+
     <!-- 新会话对话框 -->
     <el-dialog v-model="newChatDialog" title="发起新会话" width="420px">
       <el-input
@@ -222,7 +232,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref, watch, nextTick, reactive, shallowRef } from "vue";
 import { useStore } from "vuex";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElImageViewer } from "element-plus";
 import { Search as SearchIcon } from "@element-plus/icons-vue";
 
 import mixin from "@/mixins/mixin";
@@ -259,6 +269,32 @@ const imageInputRef = ref<HTMLInputElement | null>(null);
 const videoInputRef = ref<HTMLInputElement | null>(null);
 const uploading = ref(false);
 const uploadProgress = ref(0);
+
+// 图片预览
+const previewSrc = ref("");
+function previewImage(src: string) {
+  if (src) previewSrc.value = src;
+}
+function onMediaError(e: Event) {
+  const img = e.target as HTMLImageElement;
+  console.warn("[Chat] 媒体加载失败：", img?.src);
+  img?.classList.add("media-error");
+}
+
+/**
+ * 解析消息真实类型：
+ * 1) 优先使用 msgType
+ * 2) 如果 msgType 缺失/为 0，但 content 看起来是聊天上传的相对路径，做启发式识别
+ *    （兜底后端 WS 推送忘了带 msgType 的情况）
+ */
+function resolvedType(msg: any): 0 | 1 | 2 {
+  const t = Number(msg?.msgType);
+  if (t === 1 || t === 2) return t;
+  const c = typeof msg?.content === "string" ? msg.content : "";
+  if (/^\/img\/chat\/image\//i.test(c) || /\.(jpe?g|png|gif|webp|bmp)$/i.test(c)) return 1;
+  if (/^\/img\/chat\/video\//i.test(c) || /\.(mp4|webm|mov|m4v)$/i.test(c)) return 2;
+  return 0;
+}
 const IMAGE_EXT = ["jpg", "jpeg", "png", "gif", "webp", "bmp"];
 const VIDEO_EXT = ["mp4", "webm", "mov", "m4v"];
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/gif,image/webp,image/bmp";
@@ -988,23 +1024,41 @@ onUnmounted(() => {
 }
 
 .msg-image {
+  display: block;
+  width: auto;
+  height: auto;
   max-width: 240px;
   max-height: 320px;
+  min-width: 80px;
+  min-height: 80px;
   border-radius: 10px;
-  display: block;
   cursor: zoom-in;
+  background: linear-gradient(135deg, #f1f3f6 0%, #e6ecf7 100%);
+  object-fit: cover;
 }
-.msg-image:deep(img) {
-  border-radius: 10px;
-  display: block;
+.msg-image.media-error {
+  position: relative;
+  background: $color-light-grey;
+  &::after {
+    content: "图片加载失败";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $theme-text-secondary;
+    font-size: 12px;
+  }
 }
 
 .msg-video {
   max-width: 280px;
   max-height: 320px;
+  min-width: 200px;
   border-radius: 10px;
   display: block;
   background: #000;
+  outline: none;
 }
 
 .panel-placeholder {
