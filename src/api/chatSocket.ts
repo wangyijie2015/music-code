@@ -12,9 +12,16 @@ class ChatSocket {
   private readonly maxRetryDelay = 30000;
 
   connect(userId: string | number) {
-    if (!userId) return;
+    if (userId === undefined || userId === null || userId === "") {
+      console.warn("[Chat] 拒绝连接：userId 为空", userId);
+      return;
+    }
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
-      if (this.currentUserId === userId) return;
+      if (this.currentUserId === userId) {
+        console.log("[Chat] 已连接到 userId=" + userId + "，跳过");
+        return;
+      }
+      console.log("[Chat] 切换账号，先断开旧连接");
       this.disconnect();
     }
     this.currentUserId = userId;
@@ -23,6 +30,7 @@ class ChatSocket {
     const baseURL = getBaseURL() || `${location.protocol}//${location.host}`;
     const wsBase = baseURL.replace(/^http/i, "ws").replace(/\/$/, "");
     const url = `${wsBase}/ws/chat?userId=${encodeURIComponent(String(userId))}`;
+    console.log("[Chat] 准备连接：", url);
 
     try {
       this.ws = new WebSocket(url);
@@ -33,6 +41,7 @@ class ChatSocket {
     }
 
     this.ws.onopen = () => {
+      console.log("[Chat] ✅ 已连接 userId=" + this.currentUserId);
       this.retryDelay = 2000;
       this.emit({ type: "open" });
     };
@@ -41,17 +50,24 @@ class ChatSocket {
       try {
         data = JSON.parse(e.data);
       } catch {
+        console.warn("[Chat] 收到非 JSON 数据：", e.data);
         return;
       }
+      console.log("[Chat] ⬇ 收到", data);
       this.emit(data);
     };
-    this.ws.onerror = () => {
+    this.ws.onerror = (ev) => {
+      console.error("[Chat] ❌ 连接异常（详情请看 Network/WS）", ev);
       this.emit({ type: "error", message: "连接异常" });
     };
-    this.ws.onclose = () => {
+    this.ws.onclose = (ev) => {
+      console.warn(
+        `[Chat] 🔌 连接关闭 code=${ev.code} reason=${ev.reason || "-"} clean=${ev.wasClean} intentional=${this.intentionalClose}`
+      );
       this.emit({ type: "close" });
       this.ws = null;
       if (!this.intentionalClose && this.currentUserId) {
+        console.log(`[Chat] 将在 ${this.retryDelay / 1000}s 后重连`);
         this.scheduleReconnect();
       }
     };
@@ -81,11 +97,17 @@ class ChatSocket {
   }
 
   send(toUserId: string | number, content: string): boolean {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return false;
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.warn("[Chat] 发送失败：WebSocket 未连接 readyState=" + (this.ws?.readyState ?? "null"));
+      return false;
+    }
     try {
-      this.ws.send(JSON.stringify({ toUserId, content }));
+      const payload = JSON.stringify({ toUserId, content });
+      console.log("[Chat] ⬆ 发送", payload);
+      this.ws.send(payload);
       return true;
-    } catch {
+    } catch (e) {
+      console.error("[Chat] 发送异常", e);
       return false;
     }
   }

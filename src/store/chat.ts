@@ -178,7 +178,11 @@ export default {
     },
     connectChat({ dispatch, rootGetters }) {
       const userId = rootGetters.userId;
-      if (!userId) return;
+      if (userId === undefined || userId === null || userId === "") {
+        console.warn("[Chat] connectChat 跳过：userId 为空，请确认已登录", userId);
+        return;
+      }
+      console.log("[Chat] connectChat userId=" + userId + " (typeof=" + typeof userId + ")");
       dispatch("bindChatSocket");
       chatSocket.connect(userId);
     },
