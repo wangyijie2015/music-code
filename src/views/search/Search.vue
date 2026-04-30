@@ -1,5 +1,9 @@
 <template>
   <div class="search">
+    <h2 class="search-title">
+      <span class="title-bar"></span>
+      搜索结果
+    </h2>
     <yin-nav :styleList="searchNavList" :activeName="activeName" @click="handleChangeView"></yin-nav>
     <component class="search-list" :is="currentView"></component>
   </div>
@@ -47,11 +51,41 @@ export default defineComponent({
 @import "@/assets/css/global.scss";
 
 .search {
-  margin: auto;
-  width: 900px;
-  
+  max-width: 960px;
+  margin: 30px auto;
+  padding: 28px 30px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $theme-border;
+
   .search-list {
     min-height: 480px;
+    margin-top: 12px;
+  }
+}
+
+.search-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: $theme-text-primary;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+
+  .title-bar {
+    width: 4px;
+    height: 22px;
+    border-radius: 4px;
+    background: $theme-gradient;
+  }
+}
+
+@media screen and (max-width: $sm) {
+  .search {
+    margin: 16px;
+    padding: 20px 16px;
   }
 }
 </style>

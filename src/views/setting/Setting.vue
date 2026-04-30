@@ -59,27 +59,77 @@ export default defineComponent({
 @import "@/assets/css/var.scss";
 @import "@/assets/css/global.scss";
 
+.setting {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $theme-border;
+}
+
 h1 {
-  border-bottom: 1px solid $color-grey;
+  font-size: 22px;
+  font-weight: 600;
+  color: $theme-text-primary;
+  padding: 22px 24px;
+  border-bottom: 1px solid $theme-border;
+  display: flex;
+  align-items: center;
+}
+h1::before {
+  content: "";
+  width: 4px;
+  height: 22px;
+  border-radius: 4px;
+  background: $theme-gradient;
+  margin-right: 12px;
 }
 
 .content {
-  padding-top: 20px;
+  padding: 30px 24px;
   text-align: center;
+}
+
+.setting:deep(.el-tabs--left) {
+  padding: 16px 0;
+}
+.setting:deep(.el-tabs__item.is-left) {
+  text-align: left;
+  padding: 0 24px;
+  height: 44px;
+  line-height: 44px;
+  font-size: 14px;
+  color: $theme-text-secondary;
+  transition: all 0.2s ease;
+}
+.setting:deep(.el-tabs__item.is-active) {
+  color: $color-blue-active;
+  font-weight: 600;
+  background: rgba(91, 141, 239, 0.08);
+}
+.setting:deep(.el-tabs__active-bar) {
+  background: $theme-gradient;
+  width: 3px !important;
+  border-radius: 3px;
 }
 
 @media screen and (min-width: $sm) {
   .setting {
     margin: 30px 10%;
-    margin-top: 0;
-    padding: 20px;
+    margin-top: 30px;
     min-height: 60vh;
   }
 }
 
 @media screen and (max-width: $sm) {
   .setting {
-    padding: 20px;
+    margin: 16px 12px;
+  }
+  h1 {
+    padding: 16px 18px;
+    font-size: 18px;
+  }
+  .content {
+    padding: 20px 16px;
   }
 }
 </style>

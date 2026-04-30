@@ -23,7 +23,9 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import "@/assets/css/var.scss";
+
 .error-page {
   display: flex;
   justify-content: center;
@@ -39,24 +41,41 @@ export default defineComponent({
 }
 
 .error-code {
-  font-size: 160px;
-  font-weight: bolder;
-  color: #00a1d6;
+  font-size: 200px;
+  font-weight: 800;
+  background: $theme-gradient;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   line-height: 1;
-  opacity: 0.3;
-  margin-bottom: -10px;
+  margin-bottom: 0;
+  letter-spacing: -8px;
+  filter: drop-shadow(0 12px 30px rgba(108, 141, 255, 0.25));
 }
 
 .error-text {
-  font-size: 24px;
-  color: #333;
-  margin: 0 0 8px;
+  font-size: 26px;
+  color: $theme-text-primary;
+  margin: 12px 0 8px;
   font-weight: 600;
 }
 
 .error-desc {
   font-size: 14px;
-  color: #999;
-  margin: 0 0 24px;
+  color: $theme-text-secondary;
+  margin: 0 0 28px;
+}
+
+.error-content:deep(.el-button--primary) {
+  background: $theme-gradient;
+  border: none;
+  padding: 12px 28px;
+  font-size: 15px;
+  border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(91, 141, 239, 0.3);
+  transition: transform 0.2s ease;
+}
+.error-content:deep(.el-button--primary:hover) {
+  transform: translateY(-2px);
 }
 </style>

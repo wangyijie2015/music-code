@@ -1,14 +1,19 @@
 <template>
   <div class="personal">
+    <div class="personal-banner">
+      <div class="banner-bubble bubble-1"></div>
+      <div class="banner-bubble bubble-2"></div>
+    </div>
     <div class="personal-info">
-      <el-image class="personal-img" fit="contain" :src="attachImageUrl(userPic)" @click="dialogTableVisible = true" />
+      <el-image class="personal-img" fit="cover" :src="attachImageUrl(userPic)" @click="dialogTableVisible = true" />
       <div class="personal-msg">
         <div class="username">{{ personalInfo.username }}</div>
-        <div class="introduction">{{ personalInfo.introduction }}</div>
+        <div class="introduction">{{ personalInfo.introduction || "这个人很懒，没有写签名~" }}</div>
       </div>
       <el-button class="edit-info" round :icon="Edit" @click="goPage()">修改个人信息</el-button>
     </div>
     <div class="personal-body">
+      <h2 class="section-title">我的收藏</h2>
       <song-list :songList="collectSongList" :show="true" @changeData="changeData"></song-list>
     </div>
     <el-dialog v-model="dialogTableVisible" title="修改头像">
@@ -103,60 +108,144 @@ export default defineComponent({
 @import "@/assets/css/var.scss";
 
 .personal {
-  padding-top: $header-height + 150px;
+  position: relative;
+  padding-top: 220px;
+}
 
-  &::before {
-    content: "";
-    background-color: $color-blue-shallow;
+.personal-banner {
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 280px;
+  background: $theme-gradient;
+  overflow: hidden;
+  z-index: 0;
+
+  .banner-bubble {
     position: absolute;
-    top: 0;
-    width: 100%;
-    height: $header-height + 150px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+  }
+  .bubble-1 {
+    width: 320px;
+    height: 320px;
+    top: -120px;
+    right: 6%;
+  }
+  .bubble-2 {
+    width: 200px;
+    height: 200px;
+    bottom: -100px;
+    left: 12%;
+    background: rgba(255, 255, 255, 0.08);
   }
 }
 
 .personal-info {
   position: relative;
-  margin-bottom: 60px;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  padding: 0 8% 30px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+
   .personal-img {
-    height: 200px;
-    width: 200px;
+    height: 180px;
+    width: 180px;
     border-radius: 50%;
-    border: 5px solid $color-white;
-    position: absolute;
-    top: -180px;
-    left: 50px;
+    border: 6px solid #fff;
     cursor: pointer;
+    box-shadow: $shadow-lg;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
   }
+  .personal-img:hover {
+    transform: scale(1.04);
+  }
+
   .personal-msg {
-    margin-left: 300px;
-    position: absolute;
-    top: -120px;
+    flex: 1;
+    min-width: 0;
+    padding-bottom: 16px;
+    color: #fff;
 
     .username {
-      font-size: 50px;
-      font-weight: 600;
+      font-size: 40px;
+      font-weight: 700;
+      line-height: 1.1;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+      margin-bottom: 8px;
     }
 
     .introduction {
-      font-size: 20px;
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 400;
+      opacity: 0.9;
+      line-height: 1.5;
     }
   }
+
   .edit-info {
-    position: absolute;
-    right: 10vw;
-    margin-top: -120px;
+    margin-bottom: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    color: $theme-text-primary;
+    font-weight: 500;
+    box-shadow: $shadow-sm;
+  }
+  .edit-info:hover {
+    background: #fff;
+    color: $color-blue-active;
   }
 }
 
-@media screen and (min-width: $sm) {
-  .personal-body {
-    padding: 0px 100px;
-  }
+.personal-body {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  border-radius: 16px;
+  margin: 0 8%;
+  padding: 24px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $theme-border;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: $theme-text-primary;
+  margin: 0 0 18px;
+  padding-left: 12px;
+  position: relative;
+}
+.section-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 4px;
+  background: $theme-gradient;
 }
 
 @media screen and (max-width: $sm) {
+  .personal-info {
+    padding: 0 6% 20px;
+    .personal-img {
+      width: 140px;
+      height: 140px;
+    }
+    .personal-msg .username {
+      font-size: 28px;
+    }
+  }
+  .personal-body {
+    margin: 0 4%;
+  }
   .edit-info {
     display: none;
   }
