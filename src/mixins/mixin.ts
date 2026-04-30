@@ -16,21 +16,24 @@ export default function () {
   const token = computed(() => store.getters.token);
 
   function getUserSex(sex) {
-    if (sex === 0) {
-      return "女";
-    } else if (sex === 1) {
-      return "男";
-    }
+    if (sex === 0) return "女";
+    if (sex === 1) return "男";
+    if (sex === 2) return "保密";
+    return "";
   }
 
   // 获取歌曲名
   function getSongTitle(str) {
-    return str.split("-")[1];
+    if (!str) return "";
+    const parts = str.split("-");
+    return (parts[1] ?? parts[0] ?? "").trim();
   }
 
   // 获取歌手名
   function getSingerName(str) {
-    return str.split("-")[0];
+    if (!str) return "";
+    const parts = str.split("-");
+    return parts.length > 1 ? (parts[0] ?? "").trim() : "";
   }
 
   // 判断登录状态

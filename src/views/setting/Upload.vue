@@ -4,7 +4,7 @@
       <el-icon class="el-icon--upload"><upload-filled /></el-icon>
       <div class="el-upload__text">将文件拖到此处或点击上传</div>
       <template #tip>
-        <p class="el-upload__tip">只能上传 {{ uploadTypes.join("、") }} 文件, 且不超过10M</p>
+        <p class="el-upload__tip">只能上传 {{ uploadTypes.join("、") }} 文件，且不超过 {{ ltCode }}MB</p>
       </template>
     </el-upload>
   </div>
@@ -25,6 +25,7 @@ export default defineComponent({
     const store = useStore();
 
     const uploadTypes = ref(["jpg", "jpeg", "png", "gif"]);
+    const ltCode = ref(2);
     const userId = computed(() => store.getters.userId);
 
     function uploadUrl() {
@@ -32,16 +33,16 @@ export default defineComponent({
     }
 
     function beforeAvatarUpload(file) {
-      const ltCode = 2;
-      const isLt10M = file.size / 1024 / 1024 < ltCode && file.size / 1024 / 1024 > 0;
+      const sizeMB = file.size / 1024 / 1024;
+      const isLtLimit = sizeMB < ltCode.value && sizeMB > 0;
       const isExistFileType = uploadTypes.value.includes(file.type.replace(/image\//, ""));
 
-      if (!isLt10M) {
-        (proxy as any).$message.error(`图片大小范围是 0~${ltCode}MB!`);
+      if (!isLtLimit) {
+        (proxy as any).$message.error(`图片大小不能超过 ${ltCode.value}MB`);
         return false;
       }
       if (!isExistFileType) {
-        (proxy as any).$message.error(`图片只支持 ${uploadTypes.value.join("、")} 格式!`);
+        (proxy as any).$message.error(`图片只支持 ${uploadTypes.value.join("、")} 格式`);
         return false;
       }
 
@@ -59,6 +60,7 @@ export default defineComponent({
 
     return {
       uploadTypes,
+      ltCode,
       uploadUrl,
       beforeAvatarUpload,
       handleAvatarSuccess,

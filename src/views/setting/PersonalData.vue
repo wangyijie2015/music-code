@@ -28,7 +28,7 @@
       <el-input v-model="registerForm.email" placeholder="邮箱"></el-input>
     </el-form-item>
     <el-form-item>
-      <el-button @click="goBack(-1)">取消</el-button>
+      <el-button @click="cancelEdit">取消</el-button>
       <el-button type="primary" @click="saveMsg()">保存</el-button>
     </el-form-item>
   </el-form>
@@ -38,14 +38,18 @@
 import { defineComponent, computed, onMounted, getCurrentInstance, reactive } from "vue";
 import { useStore } from "vuex";
 import mixin from "@/mixins/mixin";
-import { AREA, SignUpRules } from "@/enums";
+import { AREA, SignUpRules, RouterName } from "@/enums";
 import { HttpManager } from "@/api";
 
 export default defineComponent({
   setup() {
     const { proxy } = getCurrentInstance();
     const store = useStore();
-    const { goBack } = mixin();
+    const { routerManager } = mixin();
+
+    function cancelEdit() {
+      routerManager(RouterName.Personal, { path: RouterName.Personal });
+    }
 
     // 注册
     const registerForm = reactive({
@@ -95,7 +99,7 @@ export default defineComponent({
       });
       if (result.success) {
         proxy.$store.commit("setUsername", registerForm.username);
-        goBack(-1);
+        routerManager(RouterName.Personal, { path: RouterName.Personal });
       }
     }
 
@@ -108,7 +112,7 @@ export default defineComponent({
       registerForm,
       SignUpRules,
       saveMsg,
-      goBack,
+      cancelEdit,
     };
   },
 });

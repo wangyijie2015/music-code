@@ -9,9 +9,9 @@
     </div>
     <ul class="play-body">
       <li class="card-frame" v-for="(item, index) in playList" :key="index">
-        <div class="card" @click="goAblum(item)">
+        <div class="card" @click="goAlbum(item)">
           <el-image class="card-img" fit="cover" :src="attachImageUrl(item.pic)" />
-          <div class="mask" @click="goAblum(item)">
+          <div class="mask" @click="goAlbum(item)">
             <yin-icon class="mask-icon" :icon="BOFANG"></yin-icon>
           </div>
         </div>
@@ -45,14 +45,14 @@ export default defineComponent({
 
     const { path } = toRefs(props);
 
-    function goAblum(item) {
+    function goAlbum(item) {
       proxy.$store.commit("setSongDetails", item);
       routerManager(path.value, { path: `/${path.value}/${item.id}` });
     }
 
     return {
       BOFANG: Icon.BOFANG,
-      goAblum,
+      goAlbum,
       attachImageUrl: HttpManager.attachImageUrl,
     };
   },

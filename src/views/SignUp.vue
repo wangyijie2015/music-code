@@ -36,7 +36,7 @@
         </el-select>
       </el-form-item>
       <el-form-item class="sign-btn">
-        <el-button @click="goBack()">登录</el-button>
+        <el-button @click="goSignIn()">登录</el-button>
         <el-button type="primary" @click="handleSignUp">确定</el-button>
       </el-form-item>
     </el-form>
@@ -56,7 +56,11 @@ export default defineComponent({
   },
   setup() {
     const { proxy } = getCurrentInstance();
-    const { routerManager, changeIndex, goBack } = mixin();
+    const { routerManager, changeIndex } = mixin();
+
+    function goSignIn() {
+      routerManager(RouterName.SignIn, { path: RouterName.SignIn });
+    }
 
     const registerForm = reactive({
       username: "",
@@ -106,7 +110,7 @@ export default defineComponent({
       AREA,
       registerForm,
       handleSignUp,
-      goBack,
+      goSignIn,
     };
   },
 });

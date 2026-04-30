@@ -22,37 +22,26 @@ axios.interceptors.response.use(
   },
   // 服务器状态码不是2开头的的情况
   (error) => {
-    if (error.response.status) {
-      switch (error.response.status) {
-        // 401: 未登录
-        case 401:
-          router.replace({
-            path: "/",
-            query: {
-              // redirect: router.currentRoute.fullPath
-            },
-          });
-          break;
-        case 403:
-          // console.log('管理员权限已修改请重新登录')
-          // 跳转登录页面，并将要浏览的页面fullPath传过去，登录成功后跳转需要访问的页面
-          setTimeout(() => {
-            router.replace({
-              path: "/",
-              query: {
-                // redirect: router.currentRoute.fullPath
-              },
-            });
-          }, 1000);
-          break;
-
-        // 404请求不存在
-        case 404:
-          // console.log('请求页面飞到火星去了')
-          break;
-      }
-      return Promise.reject(error.response);
+    if (!error.response) {
+      // 网络异常 / 请求超时
+      return Promise.reject(error);
     }
+    switch (error.response.status) {
+      // 401: 未登录
+      case 401:
+        router.replace({ path: "/sign-in" });
+        break;
+      case 403:
+        // 跳转登录页面
+        setTimeout(() => {
+          router.replace({ path: "/sign-in" });
+        }, 1000);
+        break;
+      // 404 请求不存在
+      case 404:
+        break;
+    }
+    return Promise.reject(error.response);
   }
 );
 

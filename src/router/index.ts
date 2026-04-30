@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import store from "@/store";
+import { ElMessage } from "element-plus";
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/:pathMatch(.*)*",
@@ -106,6 +108,19 @@ const routes: Array<RouteRecordRaw> = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some((record) => record.meta?.requireAuth)) {
+    if (store.getters.token) {
+      next();
+    } else {
+      ElMessage.warning("请先登录");
+      next({ path: "/sign-in" });
+    }
+  } else {
+    next();
+  }
 });
 
 export default router;

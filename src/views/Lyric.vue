@@ -57,7 +57,8 @@ export default defineComponent({
     const singerName = computed(() => store.getters.singerName); // 歌手名
     const songPic = computed(() => store.getters.songPic); // 歌曲图片
     watch(songId, () => {
-      lyricArr.value = parseLyric(currentPlayList.value[currentPlayIndex.value].lyric);
+      const cur = currentPlayList.value?.[currentPlayIndex.value];
+      lyricArr.value = cur?.lyric ? parseLyric(cur.lyric) : [];
     });
     // 处理歌词位置及颜色
     let lastActiveIndex = -1;
