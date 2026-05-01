@@ -8,7 +8,11 @@
     <div class="control-box">
       <div class="info-box">
         <!--歌曲图片-->
-        <el-image class="song-bar-img" fit="contain" :src="attachImageUrl(songPic)" @click="goPlayerPage"/>
+        <el-image class="song-bar-img" fit="contain" :src="attachImageUrl(songPic)" @click="goPlayerPage">
+          <template #error>
+            <div class="song-bar-img" @click="goPlayerPage" style="width:100%;height:100%;background:#e0e0e0;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;cursor:pointer">暂无图片</div>
+          </template>
+        </el-image>
         <!--播放开始结束时间-->
         <div v-if="songId">
           <div class="song-info">{{ this.songTitle }} - {{ this.singerName }}</div>

@@ -5,27 +5,31 @@
       <span>加载中...</span>
     </div>
 
-    <template v-if="!loading && songDetails?.id">
+    <template v-if="!loading && singer?.id">
     <!-- 歌手头部 -->
     <div class="singer-header">
-      <div class="header-bg" :style="{ backgroundImage: `url(${attachImageUrl(songDetails.pic)})` }"></div>
+      <div class="header-bg" :style="{ backgroundImage: `url(${attachImageUrl(singer.pic)})` }"></div>
       <div class="header-content">
-        <el-image class="singer-avatar" fit="cover" :src="attachImageUrl(songDetails.pic)" />
+        <el-image class="singer-avatar" fit="cover" :src="attachImageUrl(singer.pic)">
+          <template #error>
+            <div class="singer-avatar" style="background:#e0e0e0;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:14px">暂无图片</div>
+          </template>
+        </el-image>
         <div class="singer-meta">
-          <h1>{{ songDetails.name }}</h1>
+          <h1>{{ singer.name }}</h1>
           <div class="meta-tags">
-            <span class="tag" v-if="songDetails.sex !== 2">{{ getUserSex(songDetails.sex) }}</span>
-            <span class="tag">{{ getBirth(songDetails.birth) }}</span>
-            <span class="tag">{{ songDetails.location }}</span>
+            <span class="tag" v-if="singer.sex !== 2">{{ getUserSex(singer.sex) }}</span>
+            <span class="tag">{{ getBirth(singer.birth) }}</span>
+            <span class="tag">{{ singer.location }}</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 简介 -->
-    <div class="section" v-if="songDetails.introduction">
+    <div class="section" v-if="singer.introduction">
       <h2 class="section-title">歌手简介</h2>
-      <p class="intro-text">{{ songDetails.introduction }}</p>
+      <p class="intro-text">{{ singer.introduction }}</p>
     </div>
 
     <!-- 歌曲列表 -->
@@ -35,7 +39,7 @@
     </div>
     </template>
 
-    <div v-if="!loading && !songDetails?.id" class="empty-wrap">
+    <div v-if="!loading && !singer?.id" class="empty-wrap">
       <span>歌手信息不存在</span>
       <el-button type="primary" @click="routerManager('/singer', { path: '/singer' })">返回歌手</el-button>
     </div>
@@ -62,21 +66,26 @@ export default defineComponent({
 
     const loading = ref(true);
     const currentSongList = ref([]);
+    const singerInfo = ref(null); // 本地歌手信息，API 获取
     const songDetails = computed(() => store.getters.songDetails);
 
-    // 如果刷新页面导致 store 中 songDetails 为空，用路由参数加载
-    const singerId = ref(route.params.id || songDetails.value?.id);
+    const singerId = ref(route.params.id);
 
-    watch(songDetails, (val) => {
-      if (val?.id && !singerId.value) {
-        singerId.value = val.id;
-        loadSongs(val.id);
+    // 歌手数据：优先 store，否则用 API 拉取
+    const singer = computed(() => singerInfo.value || songDetails.value);
+
+    async function loadSingerInfo(id) {
+      try {
+        const res = (await HttpManager.getSingerOfId(id)) as any;
+        const data = res?.data?.[0];
+        if (data) singerInfo.value = data;
+      } catch (e) {
+        console.error(e);
       }
-    });
+    }
 
     async function loadSongs(id) {
       if (!id) return;
-      loading.value = true;
       try {
         const result = (await HttpManager.getSongOfSingerId(id)) as ResponseBody;
         currentSongList.value = result.data || [];
@@ -87,15 +96,18 @@ export default defineComponent({
       }
     }
 
-    onMounted(() => {
-      if (singerId.value) {
-        loadSongs(singerId.value);
+    onMounted(async () => {
+      if (!singerId.value) return;
+      // 如果 store 里没有歌手详情，从 API 拉取
+      if (!songDetails.value?.id || songDetails.value.id != singerId.value) {
+        await loadSingerInfo(singerId.value);
       }
+      loadSongs(singerId.value);
     });
 
     return {
       loading,
-      songDetails,
+      singer,
       currentSongList,
       attachImageUrl: HttpManager.attachImageUrl,
       getBirth,
