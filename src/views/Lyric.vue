@@ -66,14 +66,15 @@ export default defineComponent({
       const routeId = route.params.id as string;
       if (!routeId) return;
 
-      // 如果当前播放的正好是这个 ID，且 store 已有歌词，跳过
+      // store 已有该歌曲的有效歌词则跳过
       if (routeId == songId.value && store.getters.lyric?.length) return;
 
       try {
         const res = (await HttpManager.getSongOfId(routeId)) as any;
         const song = res?.data?.[0];
         if (song) {
-          const rawLyric = song.lyric || "";
+          const rawLyric = typeof song.lyric === "string" ? song.lyric : "";
+          const parsed = rawLyric ? parseLyric(rawLyric) : [];
           store.dispatch("playMusic", {
             id: song.id,
             url: song.url,
@@ -81,9 +82,10 @@ export default defineComponent({
             index: 0,
             songTitle: getSongTitle(song.name),
             singerName: getSingerName(song.name),
-            lyric: rawLyric ? parseLyric(rawLyric) : [],
+            lyric: parsed,
             currentSongList: [song],
           });
+          lyricArr.value = parsed; // songId 可能没变，直接设置 lyricArr
         }
       } catch (e) {
         console.error(e);
@@ -143,7 +145,11 @@ export default defineComponent({
       }
     });
 
-    lyricArr.value = lyric.value ? parseLyric(lyric.value) : [];
+    lyricArr.value = typeof lyric.value === "string"
+      ? parseLyric(lyric.value)
+      : Array.isArray(lyric.value) && lyric.value.length
+        ? lyric.value
+        : [];
 
     return {
       songPic,

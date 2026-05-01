@@ -25,6 +25,7 @@ export function formatDate(cellValue) {
 
 // 解析歌词
 export function parseLyric(text) {
+  if (typeof text !== "string" || !text) return [];
   let lines = text.split("\n");
   const pattern = /\[\d{2}:\d{2}.(\d{3}|\d{2})\]/g;
   const result = [];
