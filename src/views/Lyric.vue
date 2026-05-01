@@ -61,11 +61,14 @@ export default defineComponent({
     const singerName = computed(() => store.getters.singerName); // 歌手名
     const songPic = computed(() => store.getters.songPic); // 歌曲图片
 
-    // 直跳 /lyric/:id 时 store 为空，需要根据路由参数加载
+    // 直跳 /lyric/:id 时 store 可能没有歌词数据，需要根据路由参数加载
     onMounted(async () => {
       const routeId = route.params.id as string;
       if (!routeId) return;
-      if (routeId == songId.value) return;
+
+      // 如果当前播放的正好是这个 ID，且 store 已有歌词，跳过
+      if (routeId == songId.value && store.getters.lyric?.length) return;
+
       try {
         const res = (await HttpManager.getSongOfId(routeId)) as any;
         const song = res?.data?.[0];
