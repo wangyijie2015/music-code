@@ -56,9 +56,16 @@ export default defineComponent({
     const songTitle = computed(() => store.getters.songTitle); // 歌名
     const singerName = computed(() => store.getters.singerName); // 歌手名
     const songPic = computed(() => store.getters.songPic); // 歌曲图片
-    watch(songId, () => {
+    watch(songId, async () => {
       const cur = currentPlayList.value?.[currentPlayIndex.value];
-      lyricArr.value = cur?.lyric ? parseLyric(cur.lyric) : [];
+      if (cur?.lyric) {
+        lyricArr.value = parseLyric(cur.lyric);
+      } else {
+        const res = await HttpManager.getSongOfId(songId.value) as any;
+        const raw = res?.data?.[0]?.lyric;
+        lyricArr.value = raw ? parseLyric(raw) : [];
+        if (raw) store.commit("setLyric", lyricArr.value);
+      }
     });
     // 处理歌词位置及颜色
     let lastActiveIndex = -1;
