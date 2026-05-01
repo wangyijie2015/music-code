@@ -33,11 +33,13 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, watch } from "vue";
+import { computed, defineComponent, ref, watch, onMounted } from "vue";
 import { useStore } from "vuex";
+import { useRoute } from "vue-router";
 import Comment from "@/components/Comment.vue";
 import { parseLyric } from "@/utils";
 import { HttpManager } from "@/api";
+import mixin from "@/mixins/mixin";
 
 export default defineComponent({
   components: {
@@ -45,6 +47,8 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const route = useRoute();
+    const { getSongTitle, getSingerName } = mixin();
 
     const lrcTop = ref("80px"); // 歌词滑动
     const lyricArr = ref([]); // 当前歌曲的歌词
@@ -56,6 +60,32 @@ export default defineComponent({
     const songTitle = computed(() => store.getters.songTitle); // 歌名
     const singerName = computed(() => store.getters.singerName); // 歌手名
     const songPic = computed(() => store.getters.songPic); // 歌曲图片
+
+    // 直跳 /lyric/:id 时 store 为空，需要根据路由参数加载
+    onMounted(async () => {
+      const routeId = route.params.id as string;
+      if (!routeId) return;
+      if (routeId == songId.value) return;
+      try {
+        const res = (await HttpManager.getSongOfId(routeId)) as any;
+        const song = res?.data?.[0];
+        if (song) {
+          const rawLyric = song.lyric || "";
+          store.dispatch("playMusic", {
+            id: song.id,
+            url: song.url,
+            pic: song.pic,
+            index: 0,
+            songTitle: getSongTitle(song.name),
+            singerName: getSingerName(song.name),
+            lyric: rawLyric ? parseLyric(rawLyric) : [],
+            currentSongList: [song],
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
     watch(songId, async () => {
       const cur = currentPlayList.value?.[currentPlayIndex.value];
       if (cur?.lyric) {
